@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>日プ新世界 推しメーカー</title>
+
+<style>
+  :root{
+    --bg:#f6f6f6;
+    --card:#ffffff;
+    --line:#e6e6e6;
+    --text:#111;
+    --muted:#666;
+    --shadow: 0 4px 14px rgba(0,0,0,.06);
+    --radius:14px;
+
+    /* ★青固定 */
+    --blue:#0080ff;
+
+    /* ★JSで自動調整（幅/高さどっちも見て「必ず収まる」） */
+    --slot: 82px;
+    --gap:  16px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar{
+    padding: 12px 12px 10px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  h1{margin:0;font-size:20px;line-height:1.2}
+  .by{margin:6px 0 0;font-size:13px;color:var(--muted)}
+
+  main{max-width:980px;margin:0 auto;padding:12px;}
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* 画面表示用バナー */
+  .banner{
+    height: 110px;
+    position: relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,120,200,.30), transparent 40%),
+      radial-gradient(circle at 80% 40%, rgba(120,160,255,.28), transparent 45%),
+      linear-gradient(135deg, #ffe7f4, #eef3ff);
+  }
+  .banner.hasImage{
+    background-size: cover;
+    background-position: center;
+  }
+  .banner::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.0), rgba(255,255,255,.35));
+    pointer-events:none;
+  }
+  .bannerTitle{
+    position:relative;
+    font-weight: 900;
+    letter-spacing: .06em;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(255,255,255,.9);
+    font-size: 14px;
+  }
+
+  /* ピラミッド */
+  .pyramidWrap{
+    padding: 12px 14px 8px;
+  }
+  .pyramid{
+    display:flex;
+    flex-direction:column;
+    gap: var(--gap);
+    padding: 8px 0 6px;
+    align-items:center;
+  }
+  .row{
+    display:flex;
+    justify-content:center;
+    gap: var(--gap);
+    width:100%;
+  }
+
+  .slot{
+    width: var(--slot);
+    text-align:center;
+  }
+
+  /* ★枠色を #0080ff に（白枠→青枠） */
+  .avatar{
+    width: var(--slot);
+    height: var(--slot);
+    border-radius:999px;
+    border: 5px solid var(--blue);
+    background:#fff;
+    overflow: visible;
+    box-shadow: 0 8px 18px rgba(0,0,0,.10);
+    margin: 0 auto;
+    position:relative;
+    z-index: 1;
+  }
+
+  .avatar img{
+    width:100%;
+    height:100%;
+    border-radius:999px;
+    object-fit: cover;
+    object-position: 50% 35%;
+    display:block;
+  }
+
+  .rank{
+    position:absolute;
+    left:50%;
+    bottom:-12px;
+    transform: translateX(-50%);
+    background: var(--blue);
+    color:#fff;
+    border-radius:999px;
+    font-weight:900;
+    font-size: 9px;
+    padding: 6px 8px;
+    border: none;
+    line-height:1;
+    min-width: 2.0em;
+    text-align:center;
+
+    z-index: 9999;
+    box-shadow: 0 6px 14px rgba(0,0,0,.18);
+    pointer-events:none;
+  }
+
+  .name{
+    margin-top: 14px;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+
+  .empty .avatar{
+    opacity:.16;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 34px;
+    font-weight: 900;
+    color:#555;
+  }
+  .empty .rank{display:none;}
+  .empty .name{display:none;}
+
+  .reorder{
+    display:none;
+    gap:10px;
+    justify-content:center;
+    margin-top: 8px;
+  }
+  body.reorder-on .reorder{ display:flex; }
+  .reorder button{
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding: 10px 10px 12px;
+    border-top: 1px solid #f1f1f1;
+    background:#fff;
+  }
+  button{
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 14px;
+  }
+  button:active{transform:scale(.98)}
+  .primary{border-color:#cfe2ff;}
+  .danger{border-color:#ffd6d6;}
+  .mode{border-color:#e7e7e7;}
+
+  .listCard{
+    margin-top: 12px;
+    padding: 10px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .searchRow{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom: 10px;
+  }
+  .search{
+    flex:1;
+    display:flex;
+    align-items:center;
+    border:1px solid #ddd;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background:#fff;
+  }
+  .search input{
+    border:none;
+    outline:none;
+    width:100%;
+    font-size: 15px;
+    background:transparent;
+  }
+  #membersWrap{
+    max-height: 52vh;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    border-top:1px solid #f1f1f1;
+    padding-top: 6px;
+  }
+  .memberRow{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    padding: 10px 6px;
+    border-bottom: 1px solid #f2f2f2;
+    cursor:pointer;
+    user-select:none;
+  }
+  .memberRow:last-child{border-bottom:none;}
+  .memberRow:active{transform: scale(.995);}
+  .thumb{
+    width:56px;height:56px;
+    border-radius:999px;
+    overflow:hidden;
+    border: 3px solid #f1f1f1;
+    flex: 0 0 auto;
+    background:#fff;
+  }
+  .thumb img{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit: cover;
+    object-position: 50% 35%;
+  }
+  .memberName{
+    font-size: 15px;
+    font-weight: 900;
+    line-height:1.2;
+  }
+  .memberSub{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .memberRow.selected{
+    opacity:.35;
+    filter: grayscale(1);
+    pointer-events:none;
+  }
+
+  .toast{
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.78);
+    color:#fff;
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    display:none;
+    z-index:999;
+  }
+
+  /* ===== 保存専用エリア（1004×1040固定） ===== */
+  #exportArea{
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 1004px;
+    height: 1040px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+  #exportInner{
+    width: 1004px;
+    height: 1040px;
+    position: relative;
+    background:#fff;
+    overflow:hidden;
+  }
+  .exportBanner{
+    height: 150px;
+    background-size: cover;
+    background-position: center;
+    position:relative;
+  }
+  .exportBanner::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.0), rgba(255,255,255,.35));
+    pointer-events:none;
+  }
+  .exportTitlePill{
+    position:absolute;
+    left:50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    font-weight: 900;
+    letter-spacing: .06em;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(255,255,255,.92);
+    font-size: 20px;
+    color:#111;
+    white-space: nowrap;
+  }
+  .exportBody{
+    padding: 22px 56px 100px;
+  }
+  .exportPyramid{
+    display:flex;
+    flex-direction:column;
+    gap: 26px;
+    margin-top: 10px;
+  }
+  .exportRow{
+    display:flex;
+    justify-content:center;
+    gap: 44px;
+  }
+  .exportSlot{
+    width: 130px;
+    text-align:center;
+  }
+
+  .exportAvatar{
+    width:130px;height:130px;border-radius:999px;
+    border: 8px solid var(--blue);
+    overflow: visible;
+    background:#fff;
+    margin: 0 auto;
+    box-shadow: 0 10px 22px rgba(0,0,0,.10);
+    position:relative;
+    z-index:1;
+  }
+
+  .exportPhoto{
+    width:100%;
+    height:100%;
+    border-radius:999px;
+    background-size: cover;
+    background-position: 50% 35%;
+    background-repeat: no-repeat;
+  }
+
+  .exportRank{
+    position:absolute;
+    left:50%;
+    bottom:-14px;
+    transform: translateX(-50%);
+    background: var(--blue);
+    color:#fff;
+    border-radius:999px;
+    font-weight:900;
+    font-size: 12px;
+    padding: 7px 10px;
+    border:none;
+    line-height:1;
+    min-width: 2.2em;
+    text-align:center;
+    z-index: 9999;
+    box-shadow: 0 8px 16px rgba(0,0,0,.18);
+    pointer-events:none;
+  }
+
+  .exportName{
+    margin-top: 18px;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+  }
+  .exportEmpty{
+    opacity:.14;
+    filter: grayscale(1);
+  }
+  .exportEmpty .exportAvatar{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 52px;
+    font-weight: 900;
+    color:#666;
+  }
+  .exportEmpty .exportRank{display:none;}
+  .exportEmpty .exportName{display:none;}
+
+  .exportFooter{
+    position:absolute;
+    left: 24px;
+    bottom: 18px;
+    font-size: 16px;
+    color:#666;
+    z-index: 50;
+  }
+</style>
+</head>
+
+<body>
+<header>
+  <div class="topbar">
+    <h1>日プ新世界 推しメーカー</h1>
+    <p class="by">created by @12agassi</p>
+  </div>
+</header>
+
+<main>
+  <div class="card" id="pyramidCard">
+    <div id="banner" class="banner">
+      <div class="bannerTitle">AUDITION PICK • YOUR TOP 11</div>
+    </div>
+
+    <div class="pyramidWrap" id="pyramidWrap">
+      <div class="pyramid" id="pyramid"></div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" onclick="saveImage()">画像として保存</button>
+      <button onclick="undo()">1人戻す</button>
+      <button class="danger" onclick="resetAll()">リセット</button>
+      <button class="mode" id="reorderBtn" onclick="toggleReorder()">並び替えモード：OFF</button>
+    </div>
+  </div>
+
+  <div class="listCard">
+    <div class="searchRow">
+      <div class="search">
+        <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
+      </div>
+    </div>
+    <div id="membersWrap">
+      <div id="members"></div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">画像を生成中…</div>
+
+<div id="exportArea" aria-hidden="true">
+  <div id="exportInner">
+    <div id="exportBanner" class="exportBanner">
+      <div class="exportTitlePill">AUDITION PICK • YOUR TOP 11</div>
+    </div>
+
+    <div class="exportBody">
+      <div class="exportPyramid" id="exportPyramid"></div>
+    </div>
+
+    <div class="exportFooter">created by @12agassi</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+const HEADER_IMAGE_URL = "https://i.imgur.com/nYBRUdd.png";
+
+const trainees = [
+  {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png"},
+  {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png"},
+  {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png"},
+  {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png"},
+  {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png"},
+
+  {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png"},
+  {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png"},
+  {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png"},
+  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png"},
+  {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png"},
+  {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png"},
+  {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png"}
+];
+
+const rowSizes = [1,2,3,5];
+const STORAGE_KEY = "oshimaker_selected_final_v5";
+
+let reorderMode = false;
+let selected = loadSelected();
+
+/* バナー画像反映 */
+(function setupBanners(){
+  const banner = document.getElementById("banner");
+  const exportBanner = document.getElementById("exportBanner");
+  if(HEADER_IMAGE_URL){
+    banner.classList.add("hasImage");
+    banner.style.backgroundImage = "url('" + HEADER_IMAGE_URL + "')";
+    exportBanner.style.backgroundImage = "url('" + HEADER_IMAGE_URL + "')";
+  }
+})();
+
+function displayName(full){
+  return (full || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
+}
+function alphaPart(full){
+  const m = (full||"").match(/\(([^)]*)\)/);
+  return m ? "(" + m[1] + ")" : "";
+}
+
+/* 幅・高さどっちも見て「11個が絶対に切れない」ようにslot/gapを決定 */
+function fitPyramidToViewport(){
+  var headerEl = document.querySelector("header");
+  var headerH = headerEl ? headerEl.getBoundingClientRect().height : 60;
+
+  var card = document.getElementById("pyramidCard");
+  var wrap = document.getElementById("pyramidWrap");
+  if(!card || !wrap) return;
+
+  var cardRect = card.getBoundingClientRect();
+
+  var availableW = cardRect.width - 28;
+  var availableH = window.innerHeight - headerH - 12 - 12;
+
+  var bannerH = 110;
+  var actionsH = 72;
+  var wrapPad = 12+8+10;
+
+  var nameH = 16;
+  var badgeOut = 22;
+
+  var maxRow = 5;
+
+  var slot = 92;
+  var gap  = 18;
+
+  function needHeight(s,g){
+    return bannerH + actionsH + wrapPad + (s*4) + (g*3) + (nameH*4) + badgeOut;
+  }
+  function needSlotByWidth(g){
+    return Math.floor((availableW - g*(maxRow-1)) / maxRow);
+  }
+
+  slot = Math.min(slot, needSlotByWidth(gap));
+
+  while((needHeight(slot,gap) > availableH || slot*maxRow + gap*(maxRow-1) > availableW) && slot > 58){
+    slot -= 2;
+    gap  -= 1;
+    if(gap < 10) gap = 10;
+    slot = Math.min(slot, needSlotByWidth(gap));
+  }
+
+  document.documentElement.style.setProperty("--slot", slot + "px");
+  document.documentElement.style.setProperty("--gap", gap + "px");
+}
+
+function drawMembers(){
+  var qEl = document.getElementById("search");
+  var q = (qEl ? qEl.value : "").trim().toLowerCase();
+  var membersEl = document.getElementById("members");
+  membersEl.innerHTML = "";
+
+  trainees.forEach(function(m,i){
+    var hay = (m.name || "").toLowerCase();
+    if(q && hay.indexOf(q) === -1) return;
+
+    var row = document.createElement("div");
+    row.className = "memberRow";
+    if(selected.indexOf(i) !== -1) row.classList.add("selected");
+
+    row.innerHTML = `
+      <div class="thumb"><img src="${m.img}" alt=""></div>
+      <div>
+        <div class="memberName">${displayName(m.name)}</div>
+        <div class="memberSub">${alphaPart(m.name)}</div>
+      </div>
+    `;
+    row.addEventListener("click", function(){ add(i); });
+    membersEl.appendChild(row);
+  });
+}
+
+function add(i){
+  if(selected.length >= 11){ alert("11人まで！"); return; }
+  if(selected.indexOf(i) !== -1) return;
+
+  selected.push(i);
+  saveSelected();
+
+  drawMembers();
+  drawPyramid();
+  drawExportPyramid();
+  fitPyramidToViewport();
+}
+
+function undo(){
+  selected.pop();
+  saveSelected();
+  drawMembers();
+  drawPyramid();
+  drawExportPyramid();
+  fitPyramidToViewport();
+}
+
+function resetAll(){
+  selected = [];
+  saveSelected();
+  drawMembers();
+  drawPyramid();
+  drawExportPyramid();
+  fitPyramidToViewport();
+}
+
+function saveSelected(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(selected)); }catch(e){}
+}
+function loadSelected(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    var arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(function(n){ return Number.isInteger(n); }) : [];
+  }catch(e){ return []; }
+}
+
+function toggleReorder(){
+  reorderMode = !reorderMode;
+  document.body.classList.toggle("reorder-on", reorderMode);
+  document.getElementById("reorderBtn").textContent = "並び替えモード：" + (reorderMode ? "ON" : "OFF");
+}
+
+function swap(posA, posB){
+  if(posA < 0 || posB < 0) return;
+  if(posA >= selected.length || posB >= selected.length) return;
+  var tmp = selected[posA];
+  selected[posA] = selected[posB];
+  selected[posB] = tmp;
+  saveSelected();
+  drawMembers();
+  drawPyramid();
+  drawExportPyramid();
+}
+
+function moveLeft(pos){ swap(pos, pos-1); }
+function moveRight(pos){ swap(pos, pos+1); }
+
+function drawPyramid(){
+  var p = document.getElementById("pyramid");
+  p.innerHTML = "";
+  var idx = 0;
+
+  rowSizes.forEach(function(size){
+    var row = document.createElement("div");
+    row.className = "row";
+
+    for(var k=0;k<size;k++){
+      var slot = document.createElement("div");
+      if(idx < selected.length){
+        var m = trainees[selected[idx]];
+        slot.className = "slot";
+        slot.innerHTML = `
+          <div class="avatar">
+            <img src="${m.img}" alt="">
+            <div class="rank">${idx+1}</div>
+          </div>
+          <div class="name">${displayName(m.name)}</div>
+          <div class="reorder">
+            <button onclick="moveLeft(${idx})" aria-label="left">←</button>
+            <button onclick="moveRight(${idx})" aria-label="right">→</button>
+          </div>
+        `;
+      }else{
+        slot.className = "slot empty";
+        slot.innerHTML = `<div class="avatar">+</div>`;
+      }
+      row.appendChild(slot);
+      idx++;
+    }
+    p.appendChild(row);
+  });
+}
+
+function drawExportPyramid(){
+  var p = document.getElementById("exportPyramid");
+  p.innerHTML = "";
+  var idx = 0;
+
+  rowSizes.forEach(function(size){
+    var row = document.createElement("div");
+    row.className = "exportRow";
+
+    for(var k=0;k<size;k++){
+      var slot = document.createElement("div");
+      if(idx < selected.length){
+        var m = trainees[selected[idx]];
+        slot.className = "exportSlot";
+        slot.innerHTML = `
+          <div class="exportAvatar">
+            <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
+            <div class="exportRank">${idx+1}</div>
+          </div>
+          <div class="exportName">${displayName(m.name)}</div>
+        `;
+      }else{
+        slot.className = "exportSlot exportEmpty";
+        slot.innerHTML = `<div class="exportAvatar">+</div>`;
+      }
+      row.appendChild(slot);
+      idx++;
+    }
+    p.appendChild(row);
+  });
+}
+
+async function saveImage(){
+  if(typeof html2canvas === "undefined"){
+    alert("画像保存ライブラリの読み込みに失敗しました。");
+    return;
+  }
+
+  drawExportPyramid();
+  var toast = document.getElementById("toast");
+  toast.style.display = "block";
+
+  try{
+    var target = document.getElementById("exportInner");
+    var canvas = await html2canvas(target, {
+      backgroundColor:"#ffffff",
+      useCORS:true,
+      allowTaint:false,
+      scale: 4   /* ★高画質化：2→4（重い場合は3に落としてOK） */
+    });
+
+    var link = document.createElement("a");
+    link.download = "oshimaker_1004x1040.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }catch(e){
+    alert("画像生成に失敗しました。画像URL側の制限の可能性があります。");
+  }finally{
+    toast.style.display = "none";
+  }
+}
+
+/* 初期描画 */
+drawMembers();
+drawPyramid();
+drawExportPyramid();
+fitPyramidToViewport();
+window.addEventListener("resize", function(){ fitPyramidToViewport(); });
+</script>
+</body>
+</html>

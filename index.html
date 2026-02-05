@@ -253,6 +253,17 @@
     font-size: 15px;
     background:transparent;
   }
+
+  /* ★追加：検索バー右のトグルボタン */
+  .toggleListBtn{
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background:#fff;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
   #membersWrap{
     max-height: 52vh;
     overflow:auto;
@@ -491,6 +502,9 @@
       <div class="search">
         <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
       </div>
+
+      <!-- ★追加：トグルボタン（初期は「練習生候補」表示） -->
+      <button class="toggleListBtn" id="toggleListBtn" onclick="toggleList()">練習生候補</button>
     </div>
     <div id="membersWrap">
       <div id="members"></div>
@@ -566,7 +580,26 @@ const trainees = [
   {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png"},
   {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png"},
 
-  /* ===== 今回追加22人 ===== */
+  {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png"},
+  {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png"},
+  {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png"},
+  {name:"甲斐 陸也(RIKUYA)", img:"https://i.imgur.com/lfiqB2f.png"},
+  {name:"大瀬 凜和(RINTO)", img:"https://i.imgur.com/OT0UHId.png"},
+  {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png"},
+  {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png"},
+  {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png"},
+  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png"},
+  {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png"},
+  {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png"},
+  {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png"},
+  {name:"オ・シンヘン(SHINHAENG)", img:"https://i.imgur.com/LH673dA.png"},
+  {name:"岩城 慎二(SHINJI)", img:"https://i.imgur.com/h5rDvjC.png"},
+  {name:"宮崎 真佑(SHINSUKE)", img:"https://i.imgur.com/xJuj9wW.png"},
+  {name:"西﨑 柊(N.SHU)", img:"https://i.imgur.com/OZrHFUX.png"},
+  {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png"},
+  {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png"},
+  {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png"},
+
   {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png"},
   {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png"},
   {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png"},
@@ -591,11 +624,39 @@ const trainees = [
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png"}
 ];
 
-const rowSizes = [1,2,3,5];
-const STORAGE_KEY = "oshimaker_selected_final_v5";
+/* ★追加：練習生候補リスト（今は空。ここに追加していく想定） */
+const candidates = [];
 
-let reorderMode = false;
-let selected = loadSelected();
+const rowSizes = [1,2,3,5];
+
+/* ★変更：保存キーをリストごとに分ける */
+const STORAGE_KEY_TRAINEES = "oshimaker_selected_final_v5";
+const STORAGE_KEY_CANDIDATES = "oshimaker_selected_candidates_v5";
+
+/* ★追加：どちらを表示中か */
+let showingCandidates = false;
+
+/* ★変更：選択配列を2つ保持（切替で保持） */
+let selectedTrainees = loadSelected(STORAGE_KEY_TRAINEES);
+let selectedCandidates = loadSelected(STORAGE_KEY_CANDIDATES);
+
+/* ★変更：既存の selected 参照を「現在のリストの selected」に向ける */
+function getActiveList(){
+  return showingCandidates ? candidates : trainees;
+}
+function getActiveSelected(){
+  return showingCandidates ? selectedCandidates : selectedTrainees;
+}
+function setActiveSelected(arr){
+  if(showingCandidates){
+    selectedCandidates = arr;
+  }else{
+    selectedTrainees = arr;
+  }
+}
+function getActiveStorageKey(){
+  return showingCandidates ? STORAGE_KEY_CANDIDATES : STORAGE_KEY_TRAINEES;
+}
 
 /* バナー画像反映 */
 (function setupBanners(){
@@ -607,6 +668,20 @@ let selected = loadSelected();
     exportBanner.style.backgroundImage = "url('" + HEADER_IMAGE_URL + "')";
   }
 })();
+
+/* ★追加：リスト切替（1ボタン） */
+function toggleList(){
+  showingCandidates = !showingCandidates;
+
+  /* ボタン文言は「次に表示する側」 */
+  document.getElementById("toggleListBtn").textContent = showingCandidates ? "練習生" : "練習生候補";
+
+  /* 検索はそのままでもOK（そのままフィルタが効く） */
+  drawMembers();
+  drawPyramid();
+  drawExportPyramid();
+  fitPyramidToViewport();
+}
 
 function displayName(full){
   return (full || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
@@ -668,7 +743,10 @@ function drawMembers(){
   var membersEl = document.getElementById("members");
   membersEl.innerHTML = "";
 
-  trainees.forEach(function(m,i){
+  var list = getActiveList();
+  var selected = getActiveSelected();
+
+  list.forEach(function(m,i){
     var hay = (m.name || "").toLowerCase();
     if(q && hay.indexOf(q) === -1) return;
 
@@ -689,11 +767,12 @@ function drawMembers(){
 }
 
 function add(i){
+  var selected = getActiveSelected();
   if(selected.length >= 11){ alert("11人まで！"); return; }
   if(selected.indexOf(i) !== -1) return;
 
   selected.push(i);
-  saveSelected();
+  saveSelected(getActiveStorageKey(), selected);
 
   drawMembers();
   drawPyramid();
@@ -702,8 +781,9 @@ function add(i){
 }
 
 function undo(){
+  var selected = getActiveSelected();
   selected.pop();
-  saveSelected();
+  saveSelected(getActiveStorageKey(), selected);
   drawMembers();
   drawPyramid();
   drawExportPyramid();
@@ -711,20 +791,21 @@ function undo(){
 }
 
 function resetAll(){
-  selected = [];
-  saveSelected();
+  var selected = [];
+  setActiveSelected(selected);
+  saveSelected(getActiveStorageKey(), selected);
   drawMembers();
   drawPyramid();
   drawExportPyramid();
   fitPyramidToViewport();
 }
 
-function saveSelected(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(selected)); }catch(e){}
+function saveSelected(key, arr){
+  try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){}
 }
-function loadSelected(){
+function loadSelected(key){
   try{
-    var raw = localStorage.getItem(STORAGE_KEY);
+    var raw = localStorage.getItem(key);
     var arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr.filter(function(n){ return Number.isInteger(n); }) : [];
   }catch(e){ return []; }
@@ -736,13 +817,16 @@ function toggleReorder(){
   document.getElementById("reorderBtn").textContent = "並び替えモード：" + (reorderMode ? "ON" : "OFF");
 }
 
+let reorderMode = false;
+
 function swap(posA, posB){
+  var selected = getActiveSelected();
   if(posA < 0 || posB < 0) return;
   if(posA >= selected.length || posB >= selected.length) return;
   var tmp = selected[posA];
   selected[posA] = selected[posB];
   selected[posB] = tmp;
-  saveSelected();
+  saveSelected(getActiveStorageKey(), selected);
   drawMembers();
   drawPyramid();
   drawExportPyramid();
@@ -756,6 +840,9 @@ function drawPyramid(){
   p.innerHTML = "";
   var idx = 0;
 
+  var list = getActiveList();
+  var selected = getActiveSelected();
+
   rowSizes.forEach(function(size){
     var row = document.createElement("div");
     row.className = "row";
@@ -763,7 +850,7 @@ function drawPyramid(){
     for(var k=0;k<size;k++){
       var slot = document.createElement("div");
       if(idx < selected.length){
-        var m = trainees[selected[idx]];
+        var m = list[selected[idx]];
         slot.className = "slot";
         slot.innerHTML = `
           <div class="avatar">
@@ -792,6 +879,9 @@ function drawExportPyramid(){
   p.innerHTML = "";
   var idx = 0;
 
+  var list = getActiveList();
+  var selected = getActiveSelected();
+
   rowSizes.forEach(function(size){
     var row = document.createElement("div");
     row.className = "exportRow";
@@ -799,7 +889,7 @@ function drawExportPyramid(){
     for(var k=0;k<size;k++){
       var slot = document.createElement("div");
       if(idx < selected.length){
-        var m = trainees[selected[idx]];
+        var m = list[selected[idx]];
         slot.className = "exportSlot";
         slot.innerHTML = `
           <div class="exportAvatar">

@@ -457,6 +457,21 @@
     color:#666;
     z-index: 50;
   }
+
+  /* ★追加：右側 profile リンク（誤タップ防止で控えめ） */
+  .profileBtn{
+    margin-left:auto;
+    font-size:12px;
+    font-weight:800;
+    color: var(--blue);
+    text-decoration:none;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,128,255,.18);
+    background:#fff;
+    flex: 0 0 auto;
+  }
+  .profileBtn:active{ opacity:.6; }
 </style>
 </head>
 
@@ -692,6 +707,13 @@ function alphaPart(full){
   return m ? "(" + m[1] + ")" : "";
 }
 
+/* ★追加：profileリンク用URL（全員漏れなく動く） */
+function getProfileUrl(fullName){
+  // まずは公式の一覧へ（確実に開ける）
+  // ※個別プロフィールのURLが分かったら、ここを「個別URL返す」に差し替えるだけで全員反映される
+  return "https://produce101.jp/profile/list/?lang=ja";
+}
+
 /* ★追加：練習生/練習生候補 切替（スクロール位置も維持） */
 function toggleCandidates(e){
   if(e && e.preventDefault) e.preventDefault();
@@ -778,12 +800,15 @@ function drawMembers(){
     row.className = "memberRow";
     if(selected.indexOf(i) !== -1) row.classList.add("selected");
 
+    var profileUrl = getProfileUrl(m.name);
+
     row.innerHTML = `
-      <div class="thumb"><img src="${m.img}" alt=""></div>
+      <div class="thumb"><img src="${m.img || FALLBACK_IMG}" alt=""></div>
       <div>
         <div class="memberName">${displayName(m.name)}</div>
         <div class="memberSub">${alphaPart(m.name)}</div>
       </div>
+      <a class="profileBtn" href="${profileUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">profile</a>
     `;
     row.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
     membersEl.appendChild(row);
@@ -869,7 +894,7 @@ function drawPyramid(){
         slot.className = "slot";
         slot.innerHTML = `
           <div class="avatar">
-            <img src="${m.img}" alt="">
+            <img src="${m.img || FALLBACK_IMG}" alt="">
             <div class="rank">${idx+1}</div>
           </div>
           <div class="name">${displayName(m.name)}</div>
@@ -905,7 +930,7 @@ function drawExportPyramid(){
         slot.className = "exportSlot";
         slot.innerHTML = `
           <div class="exportAvatar">
-            <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
+            <div class="exportPhoto" style="background-image:url('${(m.img || FALLBACK_IMG)}')"></div>
             <div class="exportRank">${idx+1}</div>
           </div>
           <div class="exportName">${displayName(m.name)}</div>

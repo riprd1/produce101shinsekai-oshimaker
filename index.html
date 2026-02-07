@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>日プ新世界 推しメーカー</title>
+<title>日プ新世界推し投票メーカー</title>
 
 <style>
   :root{
@@ -14,17 +14,21 @@
     --muted:#666;
     --shadow: 0 4px 14px rgba(0,0,0,.06);
     --radius:14px;
-
-    /* ★青固定 */
     --blue:#0080ff;
 
-    /* ★JSで自動調整（幅/高さどっちも見て「必ず収まる」） */
-    --slot: 82px;
-    --gap:  16px;
+    /* 画面側（JSで自動微調整して“必ず収まる”） */
+    --slot: 86px;
+    --gap:  14px;
+
+    /* 保存画像側：JSが“少しだけ”自動調整 */
+    --exAvatar: 112px;
+    --exBorder: 8px;
+    --exGapX: 56px;
+    --exGapY: 30px;
+    --exName: 15px;
   }
 
   *{ box-sizing:border-box; }
-
   body{
     margin:0;
     font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -40,16 +44,10 @@
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
   }
-  .topbar{
-    padding: 12px 12px 10px;
-    max-width: 980px;
-    margin: 0 auto;
-  }
+  .topbar{ padding: 12px 12px 10px; max-width: 980px; margin: 0 auto; }
   h1{margin:0;font-size:20px;line-height:1.2}
-  .by{margin:6px 0 0;font-size:13px;color:var(--muted)}
 
   main{max-width:980px;margin:0 auto;padding:12px;}
-
   .card{
     background: var(--card);
     border: 1px solid var(--line);
@@ -58,7 +56,7 @@
     overflow: hidden;
   }
 
-  /* 画面表示用バナー */
+  /* ===== 画面表示バナー ===== */
   .banner{
     height: 110px;
     position: relative;
@@ -70,10 +68,7 @@
       radial-gradient(circle at 80% 40%, rgba(120,160,255,.28), transparent 45%),
       linear-gradient(135deg, #ffe7f4, #eef3ff);
   }
-  .banner.hasImage{
-    background-size: cover;
-    background-position: center;
-  }
+  .banner.hasImage{ background-size: cover; background-position: center; }
   .banner::after{
     content:"";
     position:absolute; inset:0;
@@ -89,38 +84,44 @@
     background: rgba(255,255,255,.78);
     border: 1px solid rgba(255,255,255,.9);
     font-size: 14px;
+    z-index: 2;
+    white-space: nowrap;
   }
 
-  /* ピラミッド */
-  .pyramidWrap{
-    padding: 12px 14px 8px;
+  /* ★空き枠ピル（画面・保存で統一） */
+  .slotBadge{
+    position:absolute;
+    right: 12px;
+    bottom: 12px;
+    background: rgba(0,128,255,.92);
+    color: #fff;
+    font-weight: 900;
+    padding: 10px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.14);
+    z-index: 5;
+    white-space: nowrap;
+    pointer-events:none;
+  }
 
-    /* ★背景画像追加（ここだけ追加） */
+  /* ===== 上：選択枠（背景画像そのまま） ===== */
+  .picksWrap{
+    padding: 12px 14px 8px;
     background-image: url("https://i.imgur.com/lFGbXfI.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
-  .pyramid{
-    display:flex;
-    flex-direction:column;
-    gap: var(--gap);
-    padding: 8px 0 6px;
-    align-items:center;
-  }
-  .row{
+  .picksRow{
     display:flex;
     justify-content:center;
     gap: var(--gap);
-    width:100%;
+    flex-wrap: wrap;
+    row-gap: 14px;
+    padding: 12px 0 10px;
   }
-
-  .slot{
-    width: var(--slot);
-    text-align:center;
-  }
-
-  /* ★枠色を #0080ff に（白枠→青枠） */
+  .slot{ width: var(--slot); text-align:center; }
   .avatar{
     width: var(--slot);
     height: var(--slot);
@@ -133,7 +134,6 @@
     position:relative;
     z-index: 1;
   }
-
   .avatar img{
     width:100%;
     height:100%;
@@ -141,8 +141,11 @@
     object-fit: cover;
     object-position: 50% 35%;
     display:block;
-  }
 
+    image-rendering: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
   .rank{
     position:absolute;
     left:50%;
@@ -154,16 +157,13 @@
     font-weight:900;
     font-size: 9px;
     padding: 6px 8px;
-    border: none;
     line-height:1;
     min-width: 2.0em;
     text-align:center;
-
-    z-index: 9999;
+    z-index: 2;
     box-shadow: 0 6px 14px rgba(0,0,0,.18);
     pointer-events:none;
   }
-
   .name{
     margin-top: 14px;
     font-size: 12px;
@@ -173,7 +173,6 @@
     overflow:hidden;
     text-overflow: ellipsis;
   }
-
   .empty .avatar{
     opacity:.16;
     display:flex;
@@ -186,12 +185,7 @@
   .empty .rank{display:none;}
   .empty .name{display:none;}
 
-  .reorder{
-    display:none;
-    gap:10px;
-    justify-content:center;
-    margin-top: 8px;
-  }
+  .reorder{ display:none; gap:10px; justify-content:center; margin-top: 8px; }
   body.reorder-on .reorder{ display:flex; }
   .reorder button{
     padding: 7px 10px;
@@ -223,20 +217,63 @@
   .danger{border-color:#ffd6d6;}
   .mode{border-color:#e7e7e7;}
 
-  .listCard{
-    margin-top: 12px;
-    padding: 10px;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-  }
-  .searchRow{
-    display:flex;
-    gap:10px;
+  /* TikTok誘導（サイト上） */
+  .tiktokBtn{
+    display:inline-flex;
     align-items:center;
-    margin-bottom: 10px;
+    justify-content:center;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 900;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, #000000, #222222);
+    border: 1px solid #111;
+    box-shadow: 0 6px 14px rgba(0,0,0,.18);
   }
+  .tiktokBtn:active{ transform: scale(.98); }
+  .tiktokHint{
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 900;
+    color: #555;
+    text-align: center;
+    letter-spacing: .02em;
+  }
+  .tiktokWrap{ display:flex; flex-direction:column; align-items:center; }
+
+  /* 枠数切替 */
+  .frameControl{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .frameLabel{ font-size:12px; font-weight:900; color:#666; }
+  .frameBtns{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .frameBtnActive{ border-color:#cfe2ff; background:#eef6ff; font-weight: 1000; }
+
+  /* ===== 一覧：2列ボタン ===== */
+
+.listCard{
+  margin-top: 12px;
+  padding: 10px;
+
+  background-image: url("https://i.imgur.com/lUMY5QA.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border:1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.sectionTitle{
+  font-size: 18px;
+  font-weight: 900;
+  padding: 6px 2px 10px;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+  .searchRow{ display:flex; gap:10px; align-items:center; margin-bottom: 10px; }
   .search{
     flex:1;
     display:flex;
@@ -246,110 +283,75 @@
     padding: 10px 12px;
     background:#fff;
   }
-  .search input{
-    border:none;
-    outline:none;
-    width:100%;
-    font-size: 15px;
-    background:transparent;
+  .search input{ border:none; outline:none; width:100%; font-size: 15px; background:transparent; }
+  #membersWrap{
+    max-height: 52vh;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    border-top:1px solid #f1f1f1;
+    padding-top: 6px;
+    overscroll-behavior: contain;
   }
-
-#membersWrap{
-  max-height: 52vh;
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
-  border-top:1px solid #f1f1f1;
-  padding-top: 10px;
-
-  background-image: url("https://i.imgur.com/eJnRfv3.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-  /* =========================
-     ★ ここが「2列カード」用
-     ========================= */
-  #members{
+  .membersGrid{
     display:grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding: 2px;
+    gap:12px;
+    padding: 10px 6px 6px;
   }
 
-  .memberCard{
-    position: relative;
-    border: 1px solid #ededed;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 6px 14px rgba(0,0,0,.06);
-    overflow: hidden;
-    cursor: pointer;
-    user-select: none;
-    min-height: 170px;
-  }
-  .memberCard:active{ transform: scale(.995); }
+.memberCard{
+  position: relative;
+  cursor:pointer;
+  user-select:none;
+  text-align:center;
+  padding: 12px 10px 10px;
 
-  .memberPhoto{
-    width: 100%;
-    height: 108px;
-    background: #f5f5f5;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+  /* ★ガラス風デザイン */
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+  .memberCard:active{ transform:scale(.99); }
+  .memberCardThumb{
+    width:100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
     overflow:hidden;
+    background:#f7f7f7;
+    border:1px solid #f0f0f0;
   }
-  .memberPhoto img{
-    width: 100%;
-    height: 100%;
+  .memberCardThumb img{
+    width:100%;
+    height:100%;
     object-fit: cover;
     object-position: 50% 20%;
     display:block;
-  }
 
-  .memberInfo{
-    padding: 10px 10px 12px;
+    image-rendering: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
-  .memberName{
-    font-size: 14px;
-    font-weight: 900;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .memberSub{
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* profile バッジ（右上） */
-  .profileLink{
+  .memberCardName{ margin-top:10px; font-weight:900; font-size:14px; line-height:1.2; }
+  .memberCardSub{ margin-top:4px; font-size:12px; color: var(--muted); }
+  .memberCard.selected{ opacity:.35; filter: grayscale(1); pointer-events:none; }
+  .memberCardProfile{
     position:absolute;
-    right: 8px;
-    top: 8px;
-    padding: 6px 10px;
+    right:10px;
+    top:10px;
+    font-size:12px;
+    font-weight:900;
+    padding: 7px 10px;
     border-radius: 999px;
-    font-size: 12px;
-    font-weight: 900;
-    text-decoration: none;
+    border: 1px solid #cfe2ff;
     color: var(--blue);
     background: rgba(255,255,255,.92);
-    border: 1px solid rgba(0,128,255,.20);
-    box-shadow: 0 6px 14px rgba(0,0,0,.08);
-  }
-  .profileLink:active{ transform: scale(.98); }
-
-  /* 選択済みカードは押せない（2回選べない） */
-  .memberCard.selected{
-    opacity: .35;
-    filter: grayscale(1);
-    pointer-events: none;
+    text-decoration:none;
+    line-height:1;
   }
 
   .toast{
@@ -366,7 +368,7 @@
     z-index:999;
   }
 
-  /* ===== 保存専用エリア（1004×1040固定） ===== */
+  /* ===== 保存専用（1004×1040） ===== */
   #exportArea{
     position: fixed;
     left: -10000px;
@@ -382,13 +384,13 @@
     position: relative;
     background:#fff;
     overflow:hidden;
-
-    /* ★背景画像追加（ここだけ追加） */
     background-image: url("https://i.imgur.com/lFGbXfI.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
+
+  /* バナー */
   .exportBanner{
     height: 150px;
     background-size: cover;
@@ -415,37 +417,107 @@
     font-size: 20px;
     color:#111;
     white-space: nowrap;
+    z-index: 2;
   }
+  .exportCredit{
+    position:absolute;
+    top: 18px;
+    right: 22px;
+    font-size: 14px;
+    font-weight: 900;
+    color: rgba(0,0,0,.55);
+    background: rgba(255,255,255,.72);
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.85);
+    z-index: 120;
+    backdrop-filter: blur(6px);
+    pointer-events:none;
+  }
+
+  /* 下固定：TikTok/ハッシュタグ（必ず表示） */
+  .exportTikTok{
+    position:absolute;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    font-size: 16px;
+    font-weight: 900;
+    color: rgba(0,0,0,.55);
+    background: rgba(255,255,255,.72);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.85);
+    backdrop-filter: blur(6px);
+    z-index: 120;
+    pointer-events:none;
+    white-space: nowrap;
+  }
+  .exportHashtag{
+    position:absolute;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 900;
+    color: rgba(0,0,0,.45);
+    letter-spacing: .03em;
+    white-space: nowrap;
+    pointer-events:none;
+    z-index: 120;
+  }
+
+  /* ボディ */
   .exportBody{
-    padding: 22px 56px 100px;
+    height: calc(1040px - 150px);
+    padding: 18px 56px 0;
   }
-  .exportPyramid{
+  .exportSubtitle{
+    text-align:center;
+    font-size: 22px;
+    font-weight: 900;
+    margin-top: 10px;
+  }
+
+  /* ★保存ボディは “上(選択)” と “下(空き枠)” を固定で分割 */
+  .exportTop{
+    height: 470px;
     display:flex;
     flex-direction:column;
-    gap: 26px;
-    margin-top: 10px;
+    justify-content:flex-start;
+    align-items:center;
+    padding-top: 18px;
+  }
+  .exportRows{
+    width: 100%;
+    display:flex;
+    flex-direction:column;
+    gap: var(--exGapY);
+    align-items:center;
+    margin-top: 12px;
   }
   .exportRow{
     display:flex;
     justify-content:center;
-    gap: 44px;
-  }
-  .exportSlot{
-    width: 130px;
-    text-align:center;
+    gap: var(--exGapX);
+    width: 100%;
   }
 
+  .exportSlot{
+    width: calc(var(--exAvatar) + 90px);
+    text-align:center;
+  }
   .exportAvatar{
-    width:130px;height:130px;border-radius:999px;
-    border: 8px solid var(--blue);
+    width: var(--exAvatar);
+    height: var(--exAvatar);
+    border-radius:999px;
+    border: var(--exBorder) solid var(--blue);
     overflow: visible;
     background:#fff;
     margin: 0 auto;
     box-shadow: 0 10px 22px rgba(0,0,0,.10);
     position:relative;
-    z-index:1;
   }
-
   .exportPhoto{
     width:100%;
     height:100%;
@@ -453,8 +525,11 @@
     background-size: cover;
     background-position: 50% 35%;
     background-repeat: no-repeat;
-  }
 
+    image-rendering: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
   .exportRank{
     position:absolute;
     left:50%;
@@ -466,47 +541,83 @@
     font-weight:900;
     font-size: 12px;
     padding: 7px 10px;
-    border:none;
     line-height:1;
     min-width: 2.2em;
     text-align:center;
-    z-index: 9999;
     box-shadow: 0 8px 16px rgba(0,0,0,.18);
     pointer-events:none;
   }
-
   .exportName{
-    margin-top: 18px;
-    font-size: 16px;
+    margin-top: 16px;
+    font-size: var(--exName);
     font-weight: 900;
     line-height: 1.15;
     white-space: nowrap;
     overflow:hidden;
     text-overflow: ellipsis;
   }
-  .exportEmpty{
-    opacity:.14;
-    filter: grayscale(1);
-  }
-  .exportEmpty .exportAvatar{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size: 52px;
-    font-weight: 900;
-    color:#666;
-  }
-  .exportEmpty .exportRank{display:none;}
-  .exportEmpty .exportName{display:none;}
 
-  /* ★保存した画像の左下に created by を表示（既に入ってる） */
-  .exportFooter{
-    position:absolute;
-    left: 24px;
-    bottom: 18px;
-    font-size: 16px;
-    color:#666;
-    z-index: 50;
+  /* 下：空き枠エリア（必ず表示） */
+  .exportBottom{
+    height: calc(1040px - 150px - 470px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    padding-top: 16px;
+    padding-bottom: 90px;
+  }
+
+  .exportSlotsText{
+    text-align:center;
+    font-size: 26px;
+    font-weight: 1000;
+    color: var(--blue);
+    background: rgba(255,255,255,.95);
+    border: 4px solid var(--blue);
+    border-radius: 999px;
+    padding: 10px 22px;
+    letter-spacing: .04em;
+    white-space: nowrap;
+    box-shadow: 0 8px 18px rgba(0,128,255,.25);
+  }
+
+  .exportMissingRow{
+    margin-top: 18px;
+    display:flex;
+    justify-content:center;
+    gap: 28px;
+    min-height: 130px;
+    flex-wrap: wrap;
+  }
+
+  /* ★未選択アイコン：人型をHTML内に埋め込み（外部画像なし） */
+  .missingIcon{
+    width: 120px;
+    height: 120px;
+    background: #82cded;
+    border-radius: 16px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.12);
+
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cpath%20d='M50%2046c10.5%200%2019-8.5%2019-19S60.5%208%2050%208%2031%2016.5%2031%2027s8.5%2019%2019%2019zm0%2010c-19.3%200-35%2015.7-35%2035v1h70v-1c0-19.3-15.7-35-35-35z'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: 78%;
+
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Cpath%20d='M50%2046c10.5%200%2019-8.5%2019-19S60.5%208%2050%208%2031%2016.5%2031%2027s8.5%2019%2019%2019zm0%2010c-19.3%200-35%2015.7-35%2035v1h70v-1c0-19.3-15.7-35-35-35z'/%3E%3C/svg%3E");
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 78%;
+  }
+
+  .exportSlotsSentence{
+    margin-top: 12px;
+    text-align:center;
+    font-size: 20px;
+    font-weight: 900;
+    color: #000;
+    letter-spacing: .04em;
+    white-space: nowrap;
   }
 </style>
 </head>
@@ -514,56 +625,92 @@
 <body>
 <header>
   <div class="topbar">
-    <h1>日プ新世界 推しメーカー</h1>
-    <p class="by">created by @12agassi</p>
+    <h1>日プ新世界推し投票メーカー</h1>
   </div>
 </header>
 
 <main>
-  <div class="card" id="pyramidCard">
+  <div class="card" id="picksCard">
     <div id="banner" class="banner">
-      <div class="bannerTitle">AUDITION PICK • YOUR TOP 11</div>
+      <div class="bannerTitle">日プ新世界 推し投票メーカー</div>
+      <div class="slotBadge" id="slotBadge">空き 0 枠</div>
     </div>
 
-    <div class="pyramidWrap" id="pyramidWrap">
-      <div class="pyramid" id="pyramid"></div>
+    <div class="picksWrap" id="picksWrap">
+      <div class="picksRow" id="picksRow"></div>
     </div>
 
     <div class="actions">
-      <button class="primary" onclick="saveImage()">画像として保存</button>
-      <button onclick="undo()">1人戻す</button>
-      <button class="danger" onclick="resetAll()">リセット</button>
-      <button class="mode" id="reorderBtn" onclick="toggleReorder()">並び替えモード：OFF</button>
+      <button class="primary" type="button" onclick="saveImage()">画像として保存</button>
+      <button type="button" onclick="undo()">1人戻す</button>
+      <button class="danger" type="button" onclick="resetAll()">リセット</button>
+      <button class="mode" type="button" id="reorderBtn" onclick="toggleReorder()">並び替えモード：OFF</button>
+
+      <div class="tiktokWrap">
+        <a class="tiktokBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener">TikTokフォローお願い🥹</a>
+        <div class="tiktokHint">↑ここをクリック</div>
+      </div>
+
+      <!-- ★残す：選択枠数ボタンのみ（空き数の手入力UIは削除） -->
+      <div class="frameControl">
+        <div class="frameLabel">選択枠</div>
+        <div class="frameBtns" id="frameBtns">
+          <button type="button" class="mode frameBtn" data-n="6" onclick="setMaxPick(6)">6</button>
+          <button type="button" class="mode frameBtn" data-n="7" onclick="setMaxPick(7)">7</button>
+          <button type="button" class="mode frameBtn" data-n="8" onclick="setMaxPick(8)">8</button>
+          <button type="button" class="mode frameBtn" data-n="9" onclick="setMaxPick(9)">9</button>
+          <button type="button" class="mode frameBtn" data-n="10" onclick="setMaxPick(10)">10</button>
+          <button type="button" class="mode frameBtn" data-n="11" onclick="setMaxPick(11)">11</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="listCard">
+    <div class="sectionTitle">一覧（押して追加）</div>
     <div class="searchRow">
       <div class="search">
         <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
       </div>
-      <!-- ★追加：練習生/練習生候補の切替ボタン（1つ） -->
       <button class="mode" id="toggleListBtn" type="button" onclick="toggleCandidates(event)">練習生候補</button>
     </div>
+
     <div id="membersWrap">
-      <div id="members"></div>
+      <div id="members" class="membersGrid"></div>
     </div>
   </div>
 </main>
 
 <div class="toast" id="toast">画像を生成中…</div>
 
+<!-- 保存専用 -->
 <div id="exportArea" aria-hidden="true">
   <div id="exportInner">
+    <div class="exportCredit">created by @12agassi</div>
+
     <div id="exportBanner" class="exportBanner">
-      <div class="exportTitlePill">AUDITION PICK • YOUR TOP 11</div>
+      <div class="exportTitlePill">日プ新世界 推し投票メーカー</div>
     </div>
 
     <div class="exportBody">
-      <div class="exportPyramid" id="exportPyramid"></div>
+      <div class="exportSubtitle">投票して欲しいメンバー</div>
+
+      <div class="exportTop">
+        <div class="exportRows">
+          <div class="exportRow" id="exportRow1"></div>
+          <div class="exportRow" id="exportRow2"></div>
+        </div>
+      </div>
+
+      <div class="exportBottom">
+        <div class="exportSlotsText" id="exportSlotsText">空き 0 枠</div>
+        <div class="exportMissingRow" id="exportMissingRow"></div>
+        <div class="exportSlotsSentence" id="exportSlotsSentence">0 投票枠 空いています</div>
+      </div>
     </div>
 
-    <div class="exportFooter">created by @12agassi</div>
+    <div class="exportTikTok">TikTok:@12agassi</div>
+    <div class="exportHashtag">#日プ新世界推し投票メーカー</div>
   </div>
 </div>
 
@@ -571,164 +718,164 @@
 
 <script>
 const HEADER_IMAGE_URL = "https://i.imgur.com/nYBRUdd.png";
-
-/* ★追加：練習生候補は画像URLが未指定でも壊れないようにダミーを用意 */
 const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 
-/* 公式プロフィールURL組み立て */
-function profileUrl(pid){
-  if(!pid) return "";
-  return "https://produce101.jp/profile/detail/?lang=ja&id=" + encodeURIComponent(pid);
+let MAX_PICK = 11;
+const MAX_PICK_KEY = "oshivote_max_pick_v4";
+const STORAGE_KEY  = "oshivote_selected_v6";
+
+let showingCandidates = false;
+
+function profileUrlById(id){
+  if(!id) return "https://produce101.jp/profile/detail/?lang=ja";
+  return "https://produce101.jp/profile/detail/?id=" + encodeURIComponent(id) + "&lang=ja";
+}
+function displayName(full){
+  return (full || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
+}
+function alphaPart(full){
+  const m = (full||"").match(/\(([^)]*)\)/);
+  return m ? "(" + m[1] + ")" : "";
+}
+function withMembersScrollLock(fn){
+  const wrap = document.getElementById("membersWrap");
+  const prev = wrap ? wrap.scrollTop : 0;
+  fn();
+  requestAnimationFrame(() => { if(wrap) wrap.scrollTop = prev; });
 }
 
-/* ====== 既存 trainees を分離：練習生（全員＋あなたが追加した分含む） ====== */
-const traineesOnly = [
-  {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", pid:"adamnagai"},
-  {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", pid:"nakamaruaju"},
-  {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", pid:"aomsuungkavathin"},
-  {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png", pid:"archeruy"},
-  {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png", pid:"shinogayaayumu"},
-
-  {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", pid:"kobayashichisato"},
-  {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", pid:"katodaiki"},
-  {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", pid:"kwakdongmin"},
-  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png", pid:"suekawaeita"},
-  {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", pid:"horieito"},
-  {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", pid:"kanedaeito"},
-  {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", pid:"sakuraifuma"},
-
-  {name:"小笠原ジュゼッペ慧(GIUSEPPE)", img:"https://i.imgur.com/2oKn3Ma.jpeg", pid:"ogasawaragiuseppekei"},
-  {name:"倉橋 吾槙(GOTEN)", img:"https://i.imgur.com/hlEjYqR.png", pid:"kurahashigoten"},
-  {name:"堀尾 聖(HIJIRI)", img:"https://i.imgur.com/5Qb5dRJ.png", pid:"horiohijiri"},
-  /* ★修正：瑞慶覧 太都 の画像URL */
-  {name:"瑞慶覧 太都(HIROTO)", img:"https://i.imgur.com/siOPGIr.png", pid:"zukeranhiroto"},
-  {name:"ユ・ヒョンスン(HYEONSEUNG)", img:"https://i.imgur.com/lY3lXLj.png", pid:"yoohyeonseung"},
-  {name:"岡田 彪吾(HYUGO)", img:"https://i.imgur.com/zalwc1W.png", pid:"okadahyugo"},
-  {name:"柳谷 伊冴(ISSA)", img:"https://i.imgur.com/gboCNWu.png", pid:"yanagiyaissa"},
-  {name:"ユン・ジェヨン(JAEYONG)", img:"https://i.imgur.com/1yCImxd.png", pid:"yoonjaeyong"},
-  {name:"ジュアン・ジェイ(JAY)", img:"https://i.imgur.com/41jKNZX.png", pid:"chuangjay"},
-  {name:"丸尾 尋一郎(JINICHIRO)", img:"https://i.imgur.com/83azYjx.png", pid:"maruojinichiro"},
-  {name:"河邊 晟(JOE)", img:"https://i.imgur.com/DqUS1o6.png", pid:"kawabejoe"},
-
-  {name:"シン・ジョンウク(JUNGUK)", img:"https://i.imgur.com/6cwEusK.jpeg", pid:"shinjunguk"},
-  {name:"金安 純正(JUNSEI)", img:"https://i.imgur.com/juPhMDR.png", pid:"kaneyasujunsei"},
-  {name:"宇野 海夢(KAIMU)", img:"https://i.imgur.com/QVliSyD.png", pid:"unokaimu"},
-  {name:"多比 奏聖(KANADE)", img:"https://i.imgur.com/rdSJ6QX.png", pid:"tabikanade"},
-  {name:"横山 奏夢(KANAME)", img:"https://i.imgur.com/0brlEw8.png", pid:"yokoyamakaname"},
-  {name:"関 敬次郎(KEIJIRO)", img:"https://i.imgur.com/PHlkDUt.png", pid:"sekikeijiro"},
-  {name:"髙松 敬祐(KEISUKE)", img:"https://i.imgur.com/bs4vfiF.png", pid:"takamatsukeisuke"},
-  {name:"小野 慶人(KEITO)", img:"https://i.imgur.com/glfmRJE.png", pid:"onokeito"},
-  {name:"西山 賢人(KENTO)", img:"https://i.imgur.com/izEXoBY.png", pid:"nishiyamakento"},
-  {name:"河合 晃誠(KOSEI)", img:"https://i.imgur.com/E30eGfr.png", pid:"kawaikosei"},
-  {name:"照井 康祐(KOSUKE)", img:"https://i.imgur.com/oDkwdFn.png", pid:"teruikosuke"},
-  {name:"浅香 孝太郎(KOTARO)", img:"https://i.imgur.com/7eJxl8o.png", pid:"asakakotaro"},
-  {name:"髙谷 京平(KYOHEI)", img:"https://i.imgur.com/CLU1cPO.png", pid:"takayakyohei"},
-  {name:"田中 蒔(MAKI)", img:"https://i.imgur.com/No6Nybr.png", pid:"tanakamaki"},
-  {name:"山根 武蔵(MUSASHI)", img:"https://i.imgur.com/Ou2XuDa.png", pid:"yamanemusashi"},
-  {name:"土田 央修(OSUKE)", img:"https://i.imgur.com/Xs0WjIn.png", pid:"tsuchidaosuke"},
-  {name:"堀野 蓮(H.REN)", img:"https://i.imgur.com/FQEx0JM.png", pid:"horinoren"},
-  {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png", pid:"koshimizuren"},
-  {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png", pid:"chenrickey"},
-
-  {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png", pid:"kamimotoriku"},
-  {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png", pid:"hatobarikuto"},
-  {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png", pid:"imaerikuto"},
-  {name:"甲斐 陸也(RIKUYA)", img:"https://i.imgur.com/lfiqB2f.png", pid:"kairikuya"},
-  {name:"大瀬 凜和(RINTO)", img:"https://i.imgur.com/OT0UHId.png", pid:"ohserinto"},
-  {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", pid:"uenorui"},
-  {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", pid:"iizukaryoga"},
-  {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", pid:"ishidaryota"},
-  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png", pid:"okadoryuga"},
-  {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", pid:"sugiyamaryuji"},
-  {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", pid:"katsukiseita"},
-  {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", pid:"sawaisena"},
-  {name:"オ・シンヘン(SHINHAENG)", img:"https://i.imgur.com/LH673dA.png", pid:"ohshinhaeng"},
-  {name:"岩城 慎二(SHINJI)", img:"https://i.imgur.com/h5rDvjC.png", pid:"iwakishinji"},
-  {name:"宮崎 真佑(SHINSUKE)", img:"https://i.imgur.com/xJuj9wW.png", pid:"miyazakishinsuke"},
-  {name:"西﨑 柊(N.SHU)", img:"https://i.imgur.com/OZrHFUX.png", pid:"nishizakishu"},
-  {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png", pid:"yamashitashu"},
-  {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png", pid:"parksiyoung"},
-  {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png", pid:"satosora"},
-
-  {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png", pid:"tonosota"},
-  {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png", pid:"fujimakitaiga"},
-  {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png", pid:"matsudataiga"},
-  {name:"金倉 拓未(TAKUMI)", img:"https://i.imgur.com/O3gluG7.png", pid:"kanakuratakumi"},
-  {name:"熊部 拓斗(K.TAKUTO)", img:"https://i.imgur.com/NaQURc7.png", pid:"kumabetakuto"},
-  {name:"宮里 拓利(M.TAKUTO)", img:"https://i.imgur.com/5B8NMyF.png", pid:"miyazatotakuto"},
-  {name:"南平 達矢(TATSUYA)", img:"https://i.imgur.com/jHnmGTs.png", pid:"minamihiratatsuya"},
-  {name:"森井 輝(TERU)", img:"https://i.imgur.com/SAo1Rs4.png", pid:"moriiteru"},
-  {name:"北林 天虎(TETORA)", img:"https://i.imgur.com/2gCwqHF.png", pid:"kitabayashitetora"},
-  {name:"藤芳 辰弥(TOKIYA)", img:"https://i.imgur.com/9prpjvI.png", pid:"fujiyoshitokiya"},
-  {name:"増田 倫希(TOMOKI)", img:"https://i.imgur.com/4JSh3HD.png", pid:"masudatomoki"},
-  {name:"濱田 永遠(TOWA)", img:"https://i.imgur.com/Yap9beM.png", pid:"hamadatowa"},
-  {name:"アギナルド・トリスタン・ジェームス(TRISTAN)", img:"https://i.imgur.com/wyeHbRo.png", pid:"aguinaldotristanjames"},
-  {name:"リー・ウェイゼ(WEIZE)", img:"https://i.imgur.com/XNeHaaX.png", pid:"liweize"},
-  {name:"ヨハン・エマニュエル(YOHAN)", img:"https://i.imgur.com/RTVMTCA.png", pid:"yohanemmanuel"},
-  {name:"矢田 佳暉(YOSHIKI)", img:"https://i.imgur.com/MZbSVDq.png", pid:"yadayoshiki"},
-  {name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", pid:"gotoyuki"},
-  {name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", pid:"okadayuma"},
-  {name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", pid:"abeyura"},
-  {name:"大林 悠成(O.YUSEI)", img:"https://i.imgur.com/tp1fKqI.png", pid:"obayashiyusei"},
-  {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", pid:"sanoyusei"},
-  {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", pid:"itakurayuta"}
+/* ====== 練習生データ（あなたのまま） ====== */
+const traineesOnly = [/* 省略なし：あなたが貼った内容そのまま */ 
+  {name:"アダム・ナガイ(ADAM)", img:"https://i.imgur.com/6QGzvRx.png", id:"adamnagai"},
+  {name:"中丸 晏寿(AJU)", img:"https://i.imgur.com/KiZCKos.png", id:"nakamaruaju"},
+  {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", id:"aomsuungkavathin"},
+  {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png", id:"archeruy"},
+  {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png", id:"shinogayaayumu"},
+  {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", id:"kobayashichisato"},
+  {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", id:"katodaiki"},
+  {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", id:"kwakdongmin"},
+  {name:"末川 瑛太(EITA)", img:"https://i.imgur.com/alEjKCP.png", id:"suekawaeita"},
+  {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", id:"horieito"},
+  {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", id:"kanedaeito"},
+  {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", id:"sakuraifuma"},
+  {name:"小笠原ジュゼッペ慧(GIUSEPPE)", img:"https://i.imgur.com/2oKn3Ma.jpeg", id:"ogasawaragiuseppekei"},
+  {name:"倉橋 吾槙(GOTEN)", img:"https://i.imgur.com/hlEjYqR.png", id:"kurahashigoten"},
+  {name:"堀尾 聖(HIJIRI)", img:"https://i.imgur.com/5Qb5dRJ.png", id:"horiohijiri"},
+  {name:"瑞慶覧 太都(HIROTO)", img:"https://i.imgur.com/siOPGIr.png", id:"zukeranhiroto"},
+  {name:"ユ・ヒョンスン(HYEONSEUNG)", img:"https://i.imgur.com/lY3lXLj.png", id:"yoohyeonseung"},
+  {name:"岡田 彪吾(HYUGO)", img:"https://i.imgur.com/zalwc1W.png", id:"okadahyugo"},
+  {name:"柳谷 伊冴(ISSA)", img:"https://i.imgur.com/gboCNWu.png", id:"yanagiyaissa"},
+  {name:"ユン・ジェヨン(JAEYONG)", img:"https://i.imgur.com/1yCImxd.png", id:"yoonjaeyong"},
+  {name:"ジュアン・ジェイ(JAY)", img:"https://i.imgur.com/41jKNZX.png", id:"chuangjay"},
+  {name:"丸尾 尋一郎(JINICHIRO)", img:"https://i.imgur.com/83azYjx.png", id:"maruojinichiro"},
+  {name:"河邊 晟(JOE)", img:"https://i.imgur.com/DqUS1o6.png", id:"kawabejoe"},
+  {name:"シン・ジョンウク(JUNGUK)", img:"https://i.imgur.com/6cwEusK.jpeg", id:"shinjunguk"},
+  {name:"金安 純正(JUNSEI)", img:"https://i.imgur.com/juPhMDR.png", id:"kaneyasujunsei"},
+  {name:"宇野 海夢(KAIMU)", img:"https://i.imgur.com/QVliSyD.png", id:"unokaimu"},
+  {name:"多比 奏聖(KANADE)", img:"https://i.imgur.com/rdSJ6QX.png", id:"tabikanade"},
+  {name:"横山 奏夢(KANAME)", img:"https://i.imgur.com/0brlEw8.png", id:"yokoyamakaname"},
+  {name:"関 敬次郎(KEIJIRO)", img:"https://i.imgur.com/PHlkDUt.png", id:"sekikeijiro"},
+  {name:"髙松 敬祐(KEISUKE)", img:"https://i.imgur.com/bs4vfiF.png", id:"takamatsukeisuke"},
+  {name:"小野 慶人(KEITO)", img:"https://i.imgur.com/glfmRJE.png", id:"onokeito"},
+  {name:"西山 賢人(KENTO)", img:"https://i.imgur.com/izEXoBY.png", id:"nishiyamakento"},
+  {name:"河合 晃誠(KOSEI)", img:"https://i.imgur.com/E30eGfr.png", id:"kawaikosei"},
+  {name:"照井 康祐(KOSUKE)", img:"https://i.imgur.com/oDkwdFn.png", id:"teruikosuke"},
+  {name:"浅香 孝太郎(KOTARO)", img:"https://i.imgur.com/7eJxl8o.png", id:"asakakotaro"},
+  {name:"髙谷 京平(KYOHEI)", img:"https://i.imgur.com/CLU1cPO.png", id:"takayakyohei"},
+  {name:"田中 蒔(MAKI)", img:"https://i.imgur.com/No6Nybr.png", id:"tanakamaki"},
+  {name:"山根 武蔵(MUSASHI)", img:"https://i.imgur.com/Ou2XuDa.png", id:"yamanemusashi"},
+  {name:"土田 央修(OSUKE)", img:"https://i.imgur.com/Xs0WjIn.png", id:"tsuchidaosuke"},
+  {name:"堀野 蓮(H.REN)", img:"https://i.imgur.com/FQEx0JM.png", id:"horinoren"},
+  {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png", id:"koshimizuren"},
+  {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png", id:"chenrickey"},
+  {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png", id:"kamimotoriku"},
+  {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png", id:"hatobarikuto"},
+  {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png", id:"imaerikuto"},
+  {name:"甲斐 陸也(RIKUYA)", img:"https://i.imgur.com/lfiqB2f.png", id:"kairikuya"},
+  {name:"大瀬 凜和(RINTO)", img:"https://i.imgur.com/OT0UHId.png", id:"ohserinto"},
+  {name:"上野 琉偉(U.RUI)", img:"https://i.imgur.com/36XqMd9.png", id:"uenorui"},
+  {name:"飯塚 亮賀(RYOGA)", img:"https://i.imgur.com/ExbaI6W.png", id:"iizukaryoga"},
+  {name:"石田 亮太(RYOTA)", img:"https://i.imgur.com/Ctw95jF.png", id:"ishidaryota"},
+  {name:"岡戸 竜芽(RYUGA)", img:"https://i.imgur.com/gyPHKjY.png", id:"okadoryuga"},
+  {name:"杉山 竜司(RYUJI)", img:"https://i.imgur.com/NeB980M.png", id:"sugiyamaryuji"},
+  {name:"香月 誠太(SEITA)", img:"https://i.imgur.com/def6F6u.png", id:"katsukiseita"},
+  {name:"澤井 星名(SENA)", img:"https://i.imgur.com/Dpzzr9K.png", id:"sawaisena"},
+  {name:"オ・シンヘン(SHINHAENG)", img:"https://i.imgur.com/LH673dA.png", id:"ohshinhaeng"},
+  {name:"岩城 慎二(SHINJI)", img:"https://i.imgur.com/h5rDvjC.png", id:"iwakishinji"},
+  {name:"宮崎 真佑(SHINSUKE)", img:"https://i.imgur.com/xJuj9wW.png", id:"miyazakishinsuke"},
+  {name:"西﨑 柊(N.SHU)", img:"https://i.imgur.com/OZrHFUX.png", id:"nishizakishu"},
+  {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png", id:"yamashitashu"},
+  {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png", id:"parksiyoung"},
+  {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png", id:"satosora"},
+  {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png", id:"tonosota"},
+  {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png", id:"fujimakitaiga"},
+  {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png", id:"matsudataiga"},
+  {name:"金倉 拓未(TAKUMI)", img:"https://i.imgur.com/O3gluG7.png", id:"kanakuratakumi"},
+  {name:"熊部 拓斗(K.TAKUTO)", img:"https://i.imgur.com/NaQURc7.png", id:"kumabetakuto"},
+  {name:"宮里 拓利(M.TAKUTO)", img:"https://i.imgur.com/5B8NMyF.png", id:"miyazatotakuto"},
+  {name:"南平 達矢(TATSUYA)", img:"https://i.imgur.com/jHnmGTs.png", id:"minamihiratatsuya"},
+  {name:"森井 輝(TERU)", img:"https://i.imgur.com/SAo1Rs4.png", id:"moriiteru"},
+  {name:"北林 天虎(TETORA)", img:"https://i.imgur.com/2gCwqHF.png", id:"kitabayashitetora"},
+  {name:"藤芳 辰弥(TOKIYA)", img:"https://i.imgur.com/9prpjvI.png", id:"fujiyoshitokiya"},
+  {name:"増田 倫希(TOMOKI)", img:"https://i.imgur.com/4JSh3HD.png", id:"masudatomoki"},
+  {name:"濱田 永遠(TOWA)", img:"https://i.imgur.com/Yap9beM.png", id:"hamadatowa"},
+  {name:"アギナルド・トリスタン・ジェームス(TRISTAN)", img:"https://i.imgur.com/wyeHbRo.png", id:"aguinaldotristanjames"},
+  {name:"リー・ウェイゼ(WEIZE)", img:"https://i.imgur.com/XNeHaaX.png", id:"liweize"},
+  {name:"ヨハン・エマニュエル(YOHAN)", img:"https://i.imgur.com/RTVMTCA.png", id:"yohanemmanuel"},
+  {name:"矢田 佳暉(YOSHIKI)", img:"https://i.imgur.com/MZbSVDq.png", id:"yadayoshiki"},
+  {name:"後藤 結(YUKI)", img:"https://i.imgur.com/GZTdD57.png", id:"gotoyuki"},
+  {name:"岡田 侑磨(YUMA)", img:"https://i.imgur.com/3hhNQLj.png", id:"okadayuma"},
+  {name:"安部 結蘭(YURA)", img:"https://i.imgur.com/pbC301p.png", id:"abeyura"},
+  {name:"大林 悠成(O.YUSEI)", img:"https://i.imgur.com/tp1fKqI.png", id:"obayashiyusei"},
+  {name:"佐野 由征(S.YUSEI)", img:"https://i.imgur.com/fDql5Tu.png", id:"sanoyusei"},
+  {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", id:"itakurayuta"}
 ];
 
-/* ★追加：練習生候補（最新版フル：画像URLすべて反映済み） */
 const candidates = [
-  {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", pid:"honjoakira"},
-  {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", pid:"kojimaayumu"},
-  {name:"市川 大輝(I.DAIKI)", img:"https://i.imgur.com/72FqxLz.png", pid:"ichikawadaiki"},
-  {name:"川村 珀斗(HAKUTO)", img:"https://i.imgur.com/ua7RMig.png", pid:"kawamurahakuto"},
-  {name:"村松 遼空(HARUKU)", img:"https://i.imgur.com/3JEtKs6.png", pid:"muramatsuharuku"},
-  {name:"髙城 暖人(HARUTO)", img:"https://i.imgur.com/qdXIOpr.png", pid:"takagiharuto"},
-  {name:"平島 輝(H.HIKARU)", img:"https://i.imgur.com/P5gzRZh.png", pid:"hirashimahikaru"},
-  {name:"櫻井 輝(S.HIKARU)", img:"https://i.imgur.com/h2fBMUv.png", pid:"sakuraihikaru"},
-  {name:"佐川 太一(HIROKAZU)", img:"https://i.imgur.com/h2fBMUv.png", pid:"sagawahirokazu"},
-  {name:"イ・ヒョンジェ(HYUNJAE)", img:"https://i.imgur.com/wOhvKDu.png", pid:"leehyunjae"},
-  {name:"阿部 樹(ITSUKI)", img:"https://i.imgur.com/TaTAc2L.png", pid:"abeitsuki"},
-  {name:"イ・ジュンフン(JOONGHOON)", img:"https://i.imgur.com/4utwyOJ.png", pid:"leejoonghoon"},
-
-  {name:"リュウ・カイチ(KAICHI)", img:"https://i.imgur.com/FGbdGcI.png", pid:"liukaichi"},
-  {name:"黒﨑 貫汰(KANTA)", img:"https://i.imgur.com/j75eoO7.png", pid:"kurosakikanta"},
-  {name:"黄 敬眞(KEISHIN)", img:"https://i.imgur.com/oE7w4D7.png", pid:"kokeishin"},
-  {name:"釼持 吉成(KINARI)", img:"https://i.imgur.com/GWAtiwS.png", pid:"kenmotsukinari"},
-  {name:"小澤 昂心(KOSHIN)", img:"https://i.imgur.com/pn0zB7F.png", pid:"ozawakoshin"},
-  {name:"青沼 昂史朗(KOSHIRO)", img:"https://i.imgur.com/MDhTcs8.png", pid:"aonumakoshiro"},
-  {name:"小林 廣(KOU)", img:"https://i.imgur.com/RAoUIhC.png", pid:"kobayashikou"},
-  {name:"森 明育(MEI)", img:"https://i.imgur.com/eR0BZVs.png", pid:"morimei"},
-  {name:"マイケル ミン・マカフリ(MICHAEL MINH)", img:"https://i.imgur.com/6S8BWAA.png", pid:"michaelminhmccaffrey"},
-  {name:"パトリック ファン・レ(PATRICK)", img:"https://i.imgur.com/YRvJQYc.png", pid:"patrickphanle"},
-  {name:"笠原 蓮(KA.REN)", img:"https://i.imgur.com/ZLgNm7o.png", pid:"kasahararen"},
-  {name:"江口 蓮翔(E.RENTO)", img:"https://i.imgur.com/ewXd8NH.png", pid:"eguchirento"},
-  {name:"小林 蓮翔(K.RENTO)", img:"https://i.imgur.com/t2NbxIU.png", pid:"kobayashirento"},
-  {name:"落合 利温(RIO)", img:"https://i.imgur.com/HdTZUdu.png", pid:"ochiairio"},
-  {name:"水上 琉偉(M.RUI)", img:"https://i.imgur.com/DiUA9bw.png", pid:"mizugamirui"},
-  {name:"小谷内 瑠嘉(RUKA)", img:"https://i.imgur.com/V2XnsQ6.png", pid:"koyauchiruka"},
-  {name:"齊藤 惺(SEI)", img:"https://i.imgur.com/9HIRvNd.png", pid:"saitosei"},
-  {name:"藤本 真成(SHINSEI)", img:"https://i.imgur.com/qTooOuS.png", pid:"fujimotoshinsei"},
-  {name:"飯田 柊馬(SHUMA)", img:"https://i.imgur.com/awBBn6j.png", pid:"iidashuma"},
-  {name:"松田 颯吾(SOGO)", img:"https://i.imgur.com/Y1MQK3k.png", pid:"matsudasogo"},
-  {name:"髙橋 空良(T.SORA)", img:"https://i.imgur.com/czFpgjm.png", pid:"takahashisora"},
-  {name:"西田 颯梓(SOSHI)", img:"https://i.imgur.com/51RMIB6.png", pid:"nishidasoshi"},
-  {name:"岡本 拓士(O.TAKUTO)", img:"https://i.imgur.com/TGP6sbe.png", pid:"okamototakuto"},
-  {name:"大澤 佑冴(YUGO)", img:"https://i.imgur.com/5Gg1E1M.png", pid:"osawayugo"},
-  {name:"藤井 雄聖(F.YUSEI)", img:"https://i.imgur.com/prsNOtG.png", pid:"fujiiyusei"},
-  {name:"岡本 佑斗(YUTO)", img:"https://i.imgur.com/lzv8Vu5.png", pid:"okamotoyuto"}
+  {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", id:"honjoakira"},
+  {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", id:"kojimaayumu"},
+  {name:"市川 大輝(I.DAIKI)", img:"https://i.imgur.com/72FqxLz.png", id:"ichikawadaiki"},
+  {name:"川村 珀斗(HAKUTO)", img:"https://i.imgur.com/ua7RMig.png", id:"kawamurahakuto"},
+  {name:"村松 遼空(HARUKU)", img:"https://i.imgur.com/3JEtKs6.png", id:"muramatsuharuku"},
+  {name:"髙城 暖人(HARUTO)", img:"https://i.imgur.com/qdXIOpr.png", id:"takagiharuto"},
+  {name:"平島 輝(H.HIKARU)", img:"https://i.imgur.com/P5gzRZh.png", id:"hirashimahikaru"},
+  {name:"櫻井 輝(S.HIKARU)", img:"https://i.imgur.com/h2fBMUv.png", id:"sakuraihikaru"},
+  {name:"佐川 太一(HIROKAZU)", img:"https://i.imgur.com/h2fBMUv.png", id:"sagawahirokazu"},
+  {name:"イ・ヒョンジェ(HYUNJAE)", img:"https://i.imgur.com/wOhvKDu.png", id:"leehyunjae"},
+  {name:"阿部 樹(ITSUKI)", img:"https://i.imgur.com/TaTAc2L.png", id:"abeitsuki"},
+  {name:"イ・ジュンフン(JOONGHOON)", img:"https://i.imgur.com/4utwyOJ.png", id:"leejoonghoon"},
+  {name:"リュウ・カイチ(KAICHI)", img:"https://i.imgur.com/FGbdGcI.png", id:"liukaichi"},
+  {name:"黒﨑 貫汰(KANTA)", img:"https://i.imgur.com/j75eoO7.png", id:"kurosakikanta"},
+  {name:"黄 敬眞(KEISHIN)", img:"https://i.imgur.com/oE7w4D7.png", id:"kokeishin"},
+  {name:"釼持 吉成(KINARI)", img:"https://i.imgur.com/GWAtiwS.png", id:"kenmotsukinari"},
+  {name:"小澤 昂心(KOSHIN)", img:"https://i.imgur.com/pn0zB7F.png", id:"ozawakoshin"},
+  {name:"青沼 昂史朗(KOSHIRO)", img:"https://i.imgur.com/MDhTcs8.png", id:"aonumakoshiro"},
+  {name:"小林 廣(KOU)", img:"https://i.imgur.com/RAoUIhC.png", id:"kobayashikou"},
+  {name:"森 明育(MEI)", img:"https://i.imgur.com/eR0BZVs.png", id:"morimei"},
+  {name:"マイケル ミン・マカフリ(MICHAEL MINH)", img:"https://i.imgur.com/6S8BWAA.png", id:"michaelminhmccaffrey"},
+  {name:"パトリック ファン・レ(PATRICK)", img:"https://i.imgur.com/YRvJQYc.png", id:"patrickphanle"},
+  {name:"笠原 蓮(KA.REN)", img:"https://i.imgur.com/ZLgNm7o.png", id:"kasahararen"},
+  {name:"江口 蓮翔(E.RENTO)", img:"https://i.imgur.com/ewXd8NH.png", id:"eguchirento"},
+  {name:"小林 蓮翔(K.RENTO)", img:"https://i.imgur.com/t2NbxIU.png", id:"kobayashirento"},
+  {name:"落合 利温(RIO)", img:"https://i.imgur.com/HdTZUdu.png", id:"ochiairio"},
+  {name:"水上 琉偉(M.RUI)", img:"https://i.imgur.com/DiUA9bw.png", id:"mizugamirui"},
+  {name:"小谷内 瑠嘉(RUKA)", img:"https://i.imgur.com/V2XnsQ6.png", id:"koyauchiruka"},
+  {name:"齊藤 惺(SEI)", img:"https://i.imgur.com/9HIRvNd.png", id:"saitosei"},
+  {name:"藤本 真成(SHINSEI)", img:"https://i.imgur.com/qTooOuS.png", id:"fujimotoshinsei"},
+  {name:"飯田 柊馬(SHUMA)", img:"https://i.imgur.com/awBBn6j.png", id:"iidashuma"},
+  {name:"松田 颯吾(SOGO)", img:"https://i.imgur.com/Y1MQK3k.png", id:"matsudasogo"},
+  {name:"髙橋 空良(T.SORA)", img:"https://i.imgur.com/czFpgjm.png", id:"takahashisora"},
+  {name:"西田 颯梓(SOSHI)", img:"https://i.imgur.com/51RMIB6.png", id:"nishidasoshi"},
+  {name:"岡本 拓士(O.TAKUTO)", img:"https://i.imgur.com/TGP6sbe.png", id:"okamototakuto"},
+  {name:"大澤 佑冴(YUGO)", img:"https://i.imgur.com/5Gg1E1M.png", id:"osawayugo"},
+  {name:"藤井 雄聖(F.YUSEI)", img:"https://i.imgur.com/prsNOtG.png", id:"fujiiyusei"},
+  {name:"岡本 佑斗(YUTO)", img:"https://i.imgur.com/lzv8Vu5.png", id:"okamotoyuto"}
 ];
 
-/* ★既存ロジックは trainees を参照しているので、結合して維持 */
 const trainees = traineesOnly.concat(candidates);
 const TRAINEES_COUNT = traineesOnly.length;
 
-const rowSizes = [1,2,3,5];
-const STORAGE_KEY = "oshimaker_selected_final_v5";
-
-let reorderMode = false;
 let selected = loadSelected();
-
-/* ★追加：表示切替状態（初期は練習生表示） */
-let showingCandidates = false;
 
 /* バナー画像反映 */
 (function setupBanners(){
@@ -741,26 +888,50 @@ let showingCandidates = false;
   }
 })();
 
-function displayName(full){
-  return (full || "").replace(/\s*\([^)]*\)\s*/g, "").trim();
-}
-function alphaPart(full){
-  const m = (full||"").match(/\(([^)]*)\)/);
-  return m ? "(" + m[1] + ")" : "";
+/* 枠数ロード */
+(function loadMaxPick(){
+  try{
+    const v = parseInt(localStorage.getItem(MAX_PICK_KEY), 10);
+    if([6,7,8,9,10,11].includes(v)) MAX_PICK = v;
+  }catch(e){}
+})();
+
+function updateFrameButtons(){
+  document.querySelectorAll(".frameBtn").forEach(b=>{
+    const n = parseInt(b.getAttribute("data-n"), 10);
+    b.classList.toggle("frameBtnActive", n === MAX_PICK);
+  });
 }
 
-/* ★追加：練習生/練習生候補 切替（スクロール位置も維持） */
+function setMaxPick(n){
+  if(![6,7,8,9,10,11].includes(n)) return;
+  MAX_PICK = n;
+
+  if(selected.length > MAX_PICK){
+    selected = selected.slice(0, MAX_PICK);
+    saveSelected();
+  }
+  try{ localStorage.setItem(MAX_PICK_KEY, String(MAX_PICK)); }catch(e){}
+
+  withMembersScrollLock(() => {
+    updateFrameButtons();
+    drawPicks();
+    drawMembers();
+    drawExportPicks();
+    renderFreeSlots();
+    fitPicksToViewport();
+  });
+}
+
+/* 練習生/候補切替（スクロール維持） */
 function toggleCandidates(e){
   if(e && e.preventDefault) e.preventDefault();
-
-  var wrap = document.getElementById("membersWrap");
-  var listScroll = wrap ? wrap.scrollTop : 0;
-  var winY = window.scrollY;
+  const wrap = document.getElementById("membersWrap");
+  const listScroll = wrap ? wrap.scrollTop : 0;
+  const winY = window.scrollY;
 
   showingCandidates = !showingCandidates;
-
-  var btn = document.getElementById("toggleListBtn");
-  btn.textContent = showingCandidates ? "練習生" : "練習生候補";
+  document.getElementById("toggleListBtn").textContent = showingCandidates ? "練習生" : "練習生候補";
 
   drawMembers();
 
@@ -770,252 +941,308 @@ function toggleCandidates(e){
   });
 }
 
-/* 幅・高さどっちも見て「11個が絶対に切れない」ようにslot/gapを決定 */
-function fitPyramidToViewport(){
-  var headerEl = document.querySelector("header");
-  var headerH = headerEl ? headerEl.getBoundingClientRect().height : 60;
-
-  var card = document.getElementById("pyramidCard");
-  var wrap = document.getElementById("pyramidWrap");
-  if(!card || !wrap) return;
-
-  var cardRect = card.getBoundingClientRect();
-
-  var availableW = cardRect.width - 28;
-  var availableH = window.innerHeight - headerH - 12 - 12;
-
-  var bannerH = 110;
-  var actionsH = 72;
-  var wrapPad = 12+8+10;
-
-  var nameH = 16;
-  var badgeOut = 22;
-
-  var maxRow = 5;
-
-  var slot = 92;
-  var gap  = 18;
-
-  function needHeight(s,g){
-    return bannerH + actionsH + wrapPad + (s*4) + (g*3) + (nameH*4) + badgeOut;
-  }
-  function needSlotByWidth(g){
-    return Math.floor((availableW - g*(maxRow-1)) / maxRow);
-  }
-
-  slot = Math.min(slot, needSlotByWidth(gap));
-
-  while((needHeight(slot,gap) > availableH || slot*maxRow + gap*(maxRow-1) > availableW) && slot > 58){
-    slot -= 2;
-    gap  -= 1;
-    if(gap < 10) gap = 10;
-    slot = Math.min(slot, needSlotByWidth(gap));
-  }
-
-  document.documentElement.style.setProperty("--slot", slot + "px");
-  document.documentElement.style.setProperty("--gap", gap + "px");
+/* ★空き枠は自動計算（手入力なし） */
+function getFreeSlots(){
+  return Math.max(0, MAX_PICK - selected.length);
 }
 
-/* =========================
-   ★ 2列カード描画 + profile
-   ========================= */
+function renderFreeSlots(){
+  const free = getFreeSlots();
+  const t = `空き ${free} 枠`;
+  document.getElementById("slotBadge").textContent = t;
+  document.getElementById("exportSlotsText").textContent = t;
+  document.getElementById("exportSlotsSentence").textContent = `${free} 投票枠 空いています`;
+}
+
+/* 画面：選択枠（＋表示あり） */
+function drawPicks(){
+  const row = document.getElementById("picksRow");
+  row.innerHTML = "";
+
+  for(let i=0; i<MAX_PICK; i++){
+    const slot = document.createElement("div");
+
+    if(i < selected.length){
+      const m = trainees[selected[i]];
+      slot.className = "slot";
+      slot.innerHTML = `
+        <div class="avatar">
+          <img src="${m.img || FALLBACK_IMG}" alt="">
+          <div class="rank">${i + 1}</div>
+        </div>
+        <div class="name">${displayName(m.name)}</div>
+        <div class="reorder">
+          <button type="button" onclick="moveLeft(${i})">←</button>
+          <button type="button" onclick="moveRight(${i})">→</button>
+        </div>
+      `;
+    }else{
+      slot.className = "slot empty";
+      slot.innerHTML = `<div class="avatar">+</div>`;
+    }
+    row.appendChild(slot);
+  }
+
+  renderFreeSlots();
+}
+
+/* 一覧：2列カード＋profile */
 function drawMembers(){
-  var qEl = document.getElementById("search");
-  var q = (qEl ? qEl.value : "").trim().toLowerCase();
-  var membersEl = document.getElementById("members");
+  const q = (document.getElementById("search").value || "").trim().toLowerCase();
+  const membersEl = document.getElementById("members");
   membersEl.innerHTML = "";
 
-  /* ★表示中リストの範囲だけ出す（indexは結合配列のものを保持） */
-  var start = showingCandidates ? TRAINEES_COUNT : 0;
-  var end   = showingCandidates ? trainees.length : TRAINEES_COUNT;
+  const start = showingCandidates ? TRAINEES_COUNT : 0;
+  const end   = showingCandidates ? trainees.length : TRAINEES_COUNT;
 
-  for(var i=start; i<end; i++){
-    var m = trainees[i];
-    var hay = (m.name || "").toLowerCase();
-    if(q && hay.indexOf(q) === -1) continue;
+  for(let i=start; i<end; i++){
+    const m = trainees[i];
+    if(q && (m.name||"").toLowerCase().indexOf(q) === -1) continue;
 
-    var card = document.createElement("div");
-    card.className = "memberCard";
-    if(selected.indexOf(i) !== -1) card.classList.add("selected");
-
-    var pidUrl = profileUrl(m.pid);
+    const card = document.createElement("div");
+    card.className = "memberCard" + (selected.indexOf(i) !== -1 ? " selected" : "");
+    const purl = profileUrlById(m.id);
 
     card.innerHTML = `
-      ${pidUrl ? `<a class="profileLink" href="${pidUrl}" target="_blank" rel="noopener noreferrer">profile</a>` : ""}
-      <div class="memberPhoto"><img src="${m.img || FALLBACK_IMG}" alt=""></div>
-      <div class="memberInfo">
-        <div class="memberName">${displayName(m.name)}</div>
-        <div class="memberSub">${alphaPart(m.name)}</div>
-      </div>
+      <div class="memberCardThumb"><img src="${m.img || FALLBACK_IMG}" alt=""></div>
+      <div class="memberCardName">${displayName(m.name)}</div>
+      <div class="memberCardSub">${alphaPart(m.name)}</div>
+      <a class="memberCardProfile" href="${purl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">profile</a>
     `;
-
-    /* カード本体タップで追加 */
-    card.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
-
-    /* profile 押した時に追加が発火しないように止める */
-    var link = card.querySelector(".profileLink");
-    if(link){
-      link.addEventListener("click", function(ev){
-        ev.stopPropagation();
-      });
-    }
-
+    card.addEventListener("click", () => add(i));
     membersEl.appendChild(card);
   }
 }
 
 function add(i){
-  if(selected.length >= 11){ alert("11人まで！"); return; }
+  if(selected.length >= MAX_PICK){ alert(MAX_PICK + "人まで！"); return; }
   if(selected.indexOf(i) !== -1) return;
 
-  selected.push(i);
-  saveSelected();
-
-  drawMembers();
-  drawPyramid();
-  drawExportPyramid();
-  fitPyramidToViewport();
+  withMembersScrollLock(() => {
+    selected.push(i);
+    saveSelected();
+    drawPicks();
+    drawMembers();
+    drawExportPicks();
+    fitPicksToViewport();
+  });
 }
-
 function undo(){
-  selected.pop();
-  saveSelected();
-  drawMembers();
-  drawPyramid();
-  drawExportPyramid();
-  fitPyramidToViewport();
+  withMembersScrollLock(() => {
+    selected.pop();
+    saveSelected();
+    drawPicks();
+    drawMembers();
+    drawExportPicks();
+    fitPicksToViewport();
+  });
+}
+function resetAll(){
+  withMembersScrollLock(() => {
+    selected = [];
+    saveSelected();
+    drawPicks();
+    drawMembers();
+    drawExportPicks();
+    fitPicksToViewport();
+  });
 }
 
-function resetAll(){
-  selected = [];
-  saveSelected();
-  drawMembers();
-  drawPyramid();
-  drawExportPyramid();
-  fitPyramidToViewport();
+/* 並び替え */
+let reorderMode = false;
+function toggleReorder(){
+  reorderMode = !reorderMode;
+  document.body.classList.toggle("reorder-on", reorderMode);
+  document.getElementById("reorderBtn").textContent = "並び替えモード：" + (reorderMode ? "ON" : "OFF");
 }
+function swap(a,b){
+  if(a<0||b<0||a>=selected.length||b>=selected.length) return;
+  withMembersScrollLock(() => {
+    const t = selected[a]; selected[a]=selected[b]; selected[b]=t;
+    saveSelected();
+    drawPicks(); drawMembers(); drawExportPicks();
+  });
+}
+function moveLeft(pos){ swap(pos, pos-1); }
+function moveRight(pos){ swap(pos, pos+1); }
 
 function saveSelected(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(selected)); }catch(e){}
 }
 function loadSelected(){
   try{
-    var raw = localStorage.getItem(STORAGE_KEY);
-    var arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr.filter(function(n){ return Number.isInteger(n); }) : [];
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(n => Number.isInteger(n)) : [];
   }catch(e){ return []; }
 }
 
-function toggleReorder(){
-  reorderMode = !reorderMode;
-  document.body.classList.toggle("reorder-on", reorderMode);
-  document.getElementById("reorderBtn").textContent = "並び替えモード：" + (reorderMode ? "ON" : "OFF");
+/* ======= 保存画像の並びルール（選択人数基準） ======= */
+function exportPlanBySelectedCount(count){
+  if(count <= 0) return [0,0];
+  if(count <= 4) return [count, 0];
+  if(count === 5) return [2,3];
+  if(count === 6) return [3,3];
+  if(count === 7) return [3,4];
+  if(count === 8) return [4,4];
+  if(count === 9) return [4,5];
+  if(count === 10) return [5,5];
+  if(count === 11) return [5,6];
+  return [Math.min(5,count), Math.max(0,count-5)];
 }
 
-function swap(posA, posB){
-  if(posA < 0 || posB < 0) return;
-  if(posA >= selected.length || posB >= selected.length) return;
-  var tmp = selected[posA];
-  selected[posA] = selected[posB];
-  selected[posB] = tmp;
-  saveSelected();
-  drawMembers();
-  drawPyramid();
-  drawExportPyramid();
+/* ★“少し小さく” 自動調整（極端にしない） */
+function fitExportAvatar(count){
+  const plan = exportPlanBySelectedCount(count);
+  const maxCols = Math.max(plan[0], plan[1]);
+
+  const availableW = 1004 - 56*2;
+  const minAvatar = 96;
+  let avatar = 112;
+  let gapX = 56;
+
+  if(maxCols <= 1){
+    setExportVars(avatar, gapX, 30, 15);
+    return;
+  }
+
+  while(true){
+    const needW = avatar*maxCols + gapX*(maxCols-1);
+    if(needW <= availableW) break;
+    if(avatar <= minAvatar) break;
+    avatar -= 2;
+    gapX = Math.max(32, gapX - 2);
+  }
+
+  const border = Math.max(6, Math.round(avatar/14));
+  document.documentElement.style.setProperty("--exBorder", border + "px");
+
+  const name = Math.max(13, Math.min(15, Math.round(avatar/7.5)));
+  setExportVars(avatar, gapX, 28, name);
+}
+function setExportVars(avatar, gapX, gapY, nameSize){
+  document.documentElement.style.setProperty("--exAvatar", avatar + "px");
+  document.documentElement.style.setProperty("--exGapX", gapX + "px");
+  document.documentElement.style.setProperty("--exGapY", gapY + "px");
+  document.documentElement.style.setProperty("--exName", nameSize + "px");
 }
 
-function moveLeft(pos){ swap(pos, pos-1); }
-function moveRight(pos){ swap(pos, pos+1); }
+/* 保存：上に選択だけ（＋は出さない）／ 下に未選択ぶんを必ず出す */
+function drawExportPicks(){
+  const row1 = document.getElementById("exportRow1");
+  const row2 = document.getElementById("exportRow2");
+  row1.innerHTML = "";
+  row2.innerHTML = "";
 
-function drawPyramid(){
-  var p = document.getElementById("pyramid");
-  p.innerHTML = "";
-  var idx = 0;
+  const count = selected.length;
+  const plan = exportPlanBySelectedCount(count);
+  const r1 = plan[0], r2 = plan[1];
 
-  rowSizes.forEach(function(size){
-    var row = document.createElement("div");
-    row.className = "row";
+  fitExportAvatar(count);
 
-    for(var k=0;k<size;k++){
-      var slot = document.createElement("div");
-      if(idx < selected.length){
-        var m = trainees[selected[idx]];
-        slot.className = "slot";
-        slot.innerHTML = `
-          <div class="avatar">
-            <img src="${m.img}" alt="">
-            <div class="rank">${idx+1}</div>
-          </div>
-          <div class="name">${displayName(m.name)}</div>
-          <div class="reorder">
-            <button onclick="moveLeft(${idx})" aria-label="left">←</button>
-            <button onclick="moveRight(${idx})" aria-label="right">→</button>
-          </div>
-        `;
-      }else{
-        slot.className = "slot empty";
-        slot.innerHTML = `<div class="avatar">+</div>`;
-      }
-      row.appendChild(slot);
-      idx++;
+  for(let i=0;i<r1;i++){
+    row1.appendChild(makeExportSlot(trainees[selected[i]], i));
+  }
+  if(r2 > 0){
+    row2.style.display = "flex";
+    for(let j=0;j<r2;j++){
+      const idx = r1 + j;
+      row2.appendChild(makeExportSlot(trainees[selected[idx]], idx));
     }
-    p.appendChild(row);
-  });
+  }else{
+    row2.style.display = "none";
+  }
+
+  renderMissingSlots();
+  renderFreeSlots();
 }
 
-function drawExportPyramid(){
-  var p = document.getElementById("exportPyramid");
-  p.innerHTML = "";
-  var idx = 0;
-
-  rowSizes.forEach(function(size){
-    var row = document.createElement("div");
-    row.className = "exportRow";
-
-    for(var k=0;k<size;k++){
-      var slot = document.createElement("div");
-      if(idx < selected.length){
-        var m = trainees[selected[idx]];
-        slot.className = "exportSlot";
-        slot.innerHTML = `
-          <div class="exportAvatar">
-            <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
-            <div class="exportRank">${idx+1}</div>
-          </div>
-          <div class="exportName">${displayName(m.name)}</div>
-        `;
-      }else{
-        slot.className = "exportSlot exportEmpty";
-        slot.innerHTML = `<div class="exportAvatar">+</div>`;
-      }
-      row.appendChild(slot);
-      idx++;
-    }
-    p.appendChild(row);
-  });
+function makeExportSlot(m, orderIndex){
+  const d = document.createElement("div");
+  d.className = "exportSlot";
+  d.innerHTML = `
+    <div class="exportAvatar">
+      <div class="exportPhoto" style="background-image:url('${(m && m.img) ? m.img : FALLBACK_IMG}')"></div>
+      <div class="exportRank">${orderIndex + 1}</div>
+    </div>
+    <div class="exportName">${displayName(m && m.name ? m.name : "")}</div>
+  `;
+  return d;
 }
 
+function renderMissingSlots(){
+  const row = document.getElementById("exportMissingRow");
+  row.innerHTML = "";
+  const missing = Math.max(0, MAX_PICK - selected.length);
+  for(let i=0;i<missing;i++){
+    const d = document.createElement("div");
+    d.className = "missingIcon";
+    row.appendChild(d);
+  }
+}
+
+/* ★画面内で見切れないように、slot/gapを自動調整（最小限） */
+function fitPicksToViewport(){
+  const headerEl = document.querySelector("header");
+  const headerH = headerEl ? headerEl.getBoundingClientRect().height : 60;
+
+  const card = document.getElementById("picksCard");
+  const wrap = document.getElementById("picksWrap");
+  if(!card || !wrap) return;
+
+  const cardRect = card.getBoundingClientRect();
+  const availableW = cardRect.width - 28;
+  const availableH = window.innerHeight - headerH - 12 - 12;
+
+  const bannerH = 110;
+  const actionsH = card.querySelector(".actions") ? card.querySelector(".actions").getBoundingClientRect().height : 140;
+  const wrapPad = 12+8+10;
+
+  // だいたいの高さ（行数はMAX_PICKで概算）
+  const rows = Math.ceil(MAX_PICK / 5); // 雑に：5個/行を目安に
+  let slot = 86;
+  let gap  = 14;
+
+  function needW(s,g){
+    const cols = Math.min(5, MAX_PICK);
+    return s*cols + g*(cols-1);
+  }
+  function needH(s,g){
+    const one = s + 26; // 名称分など
+    return bannerH + actionsH + wrapPad + (one*rows) + (14*(rows-1));
+  }
+
+  while((needW(slot,gap) > availableW || needH(slot,gap) > availableH) && slot > 62){
+    slot -= 2;
+    gap  = Math.max(10, gap - 1);
+  }
+
+  document.documentElement.style.setProperty("--slot", slot + "px");
+  document.documentElement.style.setProperty("--gap", gap + "px");
+}
+
+/* 保存 */
 async function saveImage(){
   if(typeof html2canvas === "undefined"){
     alert("画像保存ライブラリの読み込みに失敗しました。");
     return;
   }
 
-  drawExportPyramid();
-  var toast = document.getElementById("toast");
+  drawExportPicks();
+
+  const toast = document.getElementById("toast");
   toast.style.display = "block";
 
   try{
-    var target = document.getElementById("exportInner");
-    var canvas = await html2canvas(target, {
+    const target = document.getElementById("exportInner");
+    const canvas = await html2canvas(target, {
       backgroundColor:"#ffffff",
       useCORS:true,
       allowTaint:false,
-      scale: 4
+      scale: 5
     });
-
-    var link = document.createElement("a");
-    link.download = "oshimaker_1004x1040.png";
+    const link = document.createElement("a");
+    link.download = "oshivote_1004x1040.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
   }catch(e){
@@ -1026,11 +1253,12 @@ async function saveImage(){
 }
 
 /* 初期描画 */
+updateFrameButtons();
+drawPicks();
 drawMembers();
-drawPyramid();
-drawExportPyramid();
-fitPyramidToViewport();
-window.addEventListener("resize", function(){ fitPyramidToViewport(); });
+drawExportPicks();
+fitPicksToViewport();
+window.addEventListener("resize", fitPicksToViewport);
 </script>
 </body>
 </html>

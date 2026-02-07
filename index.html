@@ -645,7 +645,7 @@
     background: rgba(255,255,255,.06);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    animation: fxPop 900ms ease forwards;
+    animation: fxPop 1900ms ease forwards;
   }
   @keyframes fxPop{
     0%   { opacity: 0; transform: translateY(10px) scale(.96); filter: blur(6px); }
@@ -681,7 +681,7 @@
     <div class="lockBody">
       <p class="lockLabel">合言葉を入力</p>
       <div class="lockInputRow">
-        <input id="passInput" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="例：MYTOP11" />
+        <input id="passInput" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="合言葉を入力" />
         <button id="unlockBtn" type="button">解除</button>
       </div>
       <div id="passErr" class="lockErr">合言葉が違います</div>
@@ -1248,7 +1248,7 @@ function hideLockWithFx(){
   setTimeout(function(){
     fx.classList.remove("show");
     document.body.classList.remove("locked");
-  }, 980);
+  }, 2050);
 }
 function tryUnlock(){
   var val = norm(document.getElementById("passInput").value);

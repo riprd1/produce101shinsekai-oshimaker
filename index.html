@@ -1226,7 +1226,21 @@ function norm(s){
   return (s || "").trim();
 }
 function isUnlocked(){
-  try{ return localStorage.getItem(PASS_STORAGE_KEY) === "1"; }catch(e){ return false; }
+  try{
+    const ok = localStorage.getItem(PASS_STORAGE_KEY) === "1";
+    const t  = parseInt(localStorage.getItem(PASS_TIME_KEY) || "0", 10);
+    if(!ok || !t) return false;
+
+    // 1時間以内ならOK
+    if(Date.now() - t < PASS_TTL_MS) return true;
+
+    // 期限切れ → ロックに戻す
+    localStorage.removeItem(PASS_STORAGE_KEY);
+    localStorage.removeItem(PASS_TIME_KEY);
+    return false;
+  }catch(e){
+    return false;
+  }
 }
 function setUnlocked(){
   try{ localStorage.setItem(PASS_STORAGE_KEY, "1"); }catch(e){}

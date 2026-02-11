@@ -1243,7 +1243,10 @@ function isUnlocked(){
   }
 }
 function setUnlocked(){
-  try{ localStorage.setItem(PASS_STORAGE_KEY, "1"); }catch(e){}
+  try{
+    localStorage.setItem(PASS_STORAGE_KEY, "1");
+    localStorage.setItem(PASS_TIME_KEY, Date.now().toString());
+  }catch(e){}
 }
 function showLock(){
   document.body.classList.add("locked");

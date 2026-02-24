@@ -667,6 +667,89 @@
     pointer-events: none;
     user-select: none;
   }
+
+  /* =========================
+     ★ 保存前お願いポップアップ（追加）
+     ========================= */
+  #shareModal{
+    position: fixed;
+    inset: 0;
+    z-index: 100001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0,0,0,.52);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  #shareModal.show{ display:flex; }
+
+  .shareCard{
+    width: min(520px, 100%);
+    border-radius: 18px;
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(255,255,255,.60);
+    box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    overflow: hidden;
+  }
+  .shareBody{
+    padding: 16px 14px 12px;
+  }
+  .shareTitle{
+    font-weight: 1000;
+    font-size: 16px;
+    letter-spacing: .04em;
+    margin-bottom: 10px;
+  }
+  .shareText{
+    font-size: 14px;
+    font-weight: 800;
+    color:#222;
+    line-height: 1.55;
+  }
+
+  .shareActions{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px 14px;
+    border-top: 1px solid rgba(0,0,0,.06);
+  }
+
+  .supportBtn{
+    font-size: 13px;
+    font-weight: 1000;
+    text-decoration: none;
+    color: #fff;
+    background: #111;
+    padding: 10px 14px;
+    border-radius: 999px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    white-space: nowrap;
+  }
+  .supportBtn:active{ transform: scale(.98); }
+
+  .shareRight{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+  }
+  .shareBtn{
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  .shareBtn:active{ transform: scale(.98); }
+  .shareBtn.primary{ border-color:#cfe2ff; }
+  .shareBtn.ghost{ border-color:#e7e7e7; }
 </style>
 </head>
 
@@ -740,6 +823,32 @@
 </div>
 
 <div class="toast" id="toast">画像を生成中…</div>
+
+<!-- =========================
+     ★ 保存前お願いポップアップ（追加）
+     ========================= -->
+<div id="shareModal" aria-hidden="true">
+  <div class="shareCard" role="dialog" aria-modal="true">
+    <div class="shareBody">
+      <div class="shareTitle">【お願い】</div>
+      <div class="shareText">
+        SNSに投稿する際は<br>
+        <b>#日プ新世界推しメーカー</b><br>
+        のタグを付けて投稿をお願いいたします🙇🏻‍♀️<br><br>
+        TikTokのフォローもお願い致します🥹
+      </div>
+    </div>
+
+    <div class="shareActions">
+      <a class="supportBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener noreferrer">あがっしを応援する</a>
+
+      <div class="shareRight">
+        <button id="shareCancel" type="button" class="shareBtn ghost">閉じる</button>
+        <button id="shareSave" type="button" class="shareBtn primary">画像を保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="exportArea" aria-hidden="true">
   <div id="exportInner">
@@ -1189,9 +1298,51 @@ function drawExportPyramid(){
   });
 }
 
+/* =========================
+   ★ 保存前お願いポップアップ制御（追加）
+   ========================= */
+function openShareModal(){
+  return new Promise(function(resolve){
+    var modal = document.getElementById("shareModal");
+    var btnCancel = document.getElementById("shareCancel");
+    var btnSave = document.getElementById("shareSave");
+
+    if(!modal || !btnCancel || !btnSave){
+      // 念のため：見つからない場合は従来通り進める
+      return resolve(true);
+    }
+
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+
+    function cleanup(){
+      btnCancel.removeEventListener("click", onCancel);
+      btnSave.removeEventListener("click", onSave);
+    }
+    function close(){
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+    }
+    function onCancel(){
+      cleanup();
+      close();
+      resolve(false);
+    }
+    function onSave(){
+      cleanup();
+      close();
+      resolve(true);
+    }
+
+    btnCancel.addEventListener("click", onCancel);
+    btnSave.addEventListener("click", onSave);
+  });
+}
+
 async function saveImage(){
 
-  alert("【お願い】\nSNSに投稿する際は\n#日プ新世界推しメーカー\nのタグを付けて投稿をお願いいたします🙇🏻‍♀️");
+  var okToSave = await openShareModal();
+  if(!okToSave) return;
 
   if(typeof html2canvas === "undefined"){
     alert("画像保存ライブラリの読み込みに失敗しました。");

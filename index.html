@@ -750,6 +750,61 @@
   .shareBtn:active{ transform: scale(.98); }
   .shareBtn.primary{ border-color:#cfe2ff; }
   .shareBtn.ghost{ border-color:#e7e7e7; }
+
+  /* =========================
+     ★ 装飾（👑💘💕✨）UI（追加）
+     ========================= */
+  .decorMark{
+    position:absolute;
+    font-size: 22px;
+    line-height: 1;
+    pointer-events:none;
+    z-index: 9000;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.18));
+  }
+  .decor-tr{ right:-10px; top:-14px; }
+  .decor-tl{ left:-10px; top:-14px; }
+  .decor-bl{ left:-10px; bottom:-10px; }
+  .decor-br{ right:-10px; bottom:-10px; }
+
+  .decorMenu{
+    position:absolute;
+    left:50%;
+    top:-52px;
+    transform: translateX(-50%);
+    display:flex;
+    gap:6px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.96);
+    border: 1px solid rgba(0,0,0,.10);
+    box-shadow: 0 14px 26px rgba(0,0,0,.18);
+    z-index: 9500;
+  }
+  .decorBtn{
+    appearance:none;
+    border:none;
+    background: transparent;
+    padding: 0;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .decorBtn:active{ transform: scale(.95); }
+
+  /* export側（保存画像） */
+  .exportDecorMark{
+    position:absolute;
+    font-size: 34px;
+    line-height:1;
+    pointer-events:none;
+    z-index: 9000;
+    filter: drop-shadow(0 10px 16px rgba(0,0,0,.20));
+  }
+  .export-decor-tr{ right:-14px; top:-18px; }
+  .export-decor-tl{ left:-14px; top:-18px; }
+  .export-decor-bl{ left:-14px; bottom:-14px; }
+  .export-decor-br{ right:-14px; bottom:-14px; }
 </style>
 </head>
 
@@ -890,6 +945,62 @@ function profileUrl(pid){
   if(!pid) return "";
   return "https://produce101.jp/profile/detail/?lang=ja&id=" + encodeURIComponent(pid);
 }
+
+/* =========================
+   ★ 装飾（👑💘💕✨）状態（追加）
+   ========================= */
+const DECOR_STORAGE_KEY = "oshimaker_decor_v1";
+let activeDecorPos = -1;
+let decorMap = loadDecorMap();
+
+function loadDecorMap(){
+  try{
+    const raw = localStorage.getItem(DECOR_STORAGE_KEY);
+    const obj = raw ? JSON.parse(raw) : {};
+    return (obj && typeof obj === "object") ? obj : {};
+  }catch(e){
+    return {};
+  }
+}
+function saveDecorMap(){
+  try{ localStorage.setItem(DECOR_STORAGE_KEY, JSON.stringify(decorMap)); }catch(e){}
+}
+function getDecorForMember(memberIndex){
+  const key = String(memberIndex);
+  return decorMap[key] || {};
+}
+function toggleDecorByPos(pos, kind, ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  if(pos < 0 || pos >= selected.length) return;
+
+  const memberIndex = selected[pos];
+  const key = String(memberIndex);
+  if(!decorMap[key]) decorMap[key] = { crown:false, heart1:false, heart2:false, sparkle:false };
+
+  if(kind === "crown") decorMap[key].crown = !decorMap[key].crown;
+  if(kind === "heart1") decorMap[key].heart1 = !decorMap[key].heart1; // 💘
+  if(kind === "heart2") decorMap[key].heart2 = !decorMap[key].heart2; // 💕
+  if(kind === "sparkle") decorMap[key].sparkle = !decorMap[key].sparkle; // ✨
+
+  saveDecorMap();
+  activeDecorPos = -1;
+  drawPyramid();
+  drawExportPyramid();
+}
+function openDecorMenu(pos, ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  if(pos < 0 || pos >= selected.length) return;
+  activeDecorPos = (activeDecorPos === pos) ? -1 : pos;
+  drawPyramid();
+}
+
+/* 画面のどこかを押したらメニュー閉じる（追加） */
+document.addEventListener("click", function(){
+  if(activeDecorPos !== -1){
+    activeDecorPos = -1;
+    drawPyramid();
+  }
+});
 
 /* ====== traineesOnly（練習生） ====== */
 const traineesOnly = [
@@ -1248,10 +1359,29 @@ function drawPyramid(){
       var slot = document.createElement("div");
       if(idx < selected.length){
         var m = trainees[selected[idx]];
+
+        /* ★装飾取得（追加） */
+        var d = getDecorForMember(selected[idx]);
+
         slot.className = "slot";
         slot.innerHTML = `
-          <div class="avatar">
+          <div class="avatar" onclick="openDecorMenu(${idx}, event)">
             <img src="${m.img}" alt="">
+
+            ${d.crown ? `<div class="decorMark decor-tr">👑</div>` : ``}
+            ${d.heart1 ? `<div class="decorMark decor-tl">💘</div>` : ``}
+            ${d.heart2 ? `<div class="decorMark decor-bl">💕</div>` : ``}
+            ${d.sparkle ? `<div class="decorMark decor-br">✨</div>` : ``}
+
+            ${activeDecorPos === idx ? `
+              <div class="decorMenu" onclick="event.stopPropagation()">
+                <button class="decorBtn" onclick="toggleDecorByPos(${idx}, 'crown', event)">👑</button>
+                <button class="decorBtn" onclick="toggleDecorByPos(${idx}, 'heart1', event)">💘</button>
+                <button class="decorBtn" onclick="toggleDecorByPos(${idx}, 'heart2', event)">💕</button>
+                <button class="decorBtn" onclick="toggleDecorByPos(${idx}, 'sparkle', event)">✨</button>
+              </div>
+            ` : ``}
+
             <div class="rank">${idx+1}</div>
           </div>
           <div class="name">${displayName(m.name)}</div>
@@ -1284,10 +1414,20 @@ function drawExportPyramid(){
       var slot = document.createElement("div");
       if(idx < selected.length){
         var m = trainees[selected[idx]];
+
+        /* ★装飾取得（追加） */
+        var d = getDecorForMember(selected[idx]);
+
         slot.className = "exportSlot";
         slot.innerHTML = `
           <div class="exportAvatar">
             <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
+
+            ${d.crown ? `<div class="exportDecorMark export-decor-tr">👑</div>` : ``}
+            ${d.heart1 ? `<div class="exportDecorMark export-decor-tl">💘</div>` : ``}
+            ${d.heart2 ? `<div class="exportDecorMark export-decor-bl">💕</div>` : ``}
+            ${d.sparkle ? `<div class="exportDecorMark export-decor-br">✨</div>` : ``}
+
             <div class="exportRank">${idx+1}</div>
           </div>
           <div class="exportName">${displayName(m.name)}</div>

@@ -94,8 +94,6 @@
   /* ピラミッド */
   .pyramidWrap{
     padding: 12px 14px 8px;
-
-    /* ★背景画像（ピラミッド部分） */
     background-image: url("https://i.imgur.com/lFGbXfI.png");
     background-size: cover;
     background-position: center;
@@ -120,7 +118,6 @@
     text-align:center;
   }
 
-  /* ★枠色を #0080ff に */
   .avatar{
     width: var(--slot);
     height: var(--slot);
@@ -158,7 +155,6 @@
     line-height:1;
     min-width: 2.0em;
     text-align:center;
-
     z-index: 9999;
     box-shadow: 0 6px 14px rgba(0,0,0,.18);
     pointer-events:none;
@@ -254,23 +250,18 @@
     background:transparent;
   }
 
-  /* 一覧スクロール領域（背景画像） */
   #membersWrap{
     max-height: 52vh;
     overflow:auto;
     -webkit-overflow-scrolling: touch;
     border-top:1px solid #f1f1f1;
     padding-top: 10px;
-
     background-image: url("https://i.imgur.com/eJnRfv3.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
 
-  /* =========================
-     ★ 2列カード
-     ========================= */
   #members{
     display:grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -329,7 +320,6 @@
     text-overflow: ellipsis;
   }
 
-  /* profile バッジ（右上） */
   .profileLink{
     position:absolute;
     right: 8px;
@@ -346,7 +336,6 @@
   }
   .profileLink:active{ transform: scale(.98); }
 
-  /* 選択済みカードは押せない（2回選べない） */
   .memberCard.selected{
     opacity: .35;
     filter: grayscale(1);
@@ -383,7 +372,6 @@
     position: relative;
     background:#fff;
     overflow:hidden;
-
     background-image: url("https://i.imgur.com/lFGbXfI.png");
     background-size: cover;
     background-position: center;
@@ -499,7 +487,6 @@
   .exportEmpty .exportRank{display:none;}
   .exportEmpty .exportName{display:none;}
 
-  /* ★保存した画像の左下に created by */
   .exportFooter{
     position:absolute;
     left: 24px;
@@ -622,7 +609,6 @@
   }
   .lockErr.show{ display:block; }
 
-  /* 解除演出（暗転→文字→ふわっと消える） */
   #unlockFx{
     position: fixed;
     inset: 0;
@@ -653,7 +639,6 @@
     100% { opacity: 0; transform: translateY(-6px) scale(1.02); filter: blur(4px); }
   }
 
-  /* 本体が「ふわっと開く」 */
   #app{
     opacity: 1;
     transform: none;
@@ -752,7 +737,7 @@
   .shareBtn.ghost{ border-color:#e7e7e7; }
 
   /* =========================
-     ★ 装飾（👑💘💕✨）UI（追加）
+     ★ 装飾（👑💘💕✨）UI（単一・同位置）
      ========================= */
   .decorMark{
     position:absolute;
@@ -762,17 +747,14 @@
     z-index: 9000;
     filter: drop-shadow(0 6px 10px rgba(0,0,0,.18));
   }
-  /* ★👑だけ斜めにする（ここだけ追加・他は触らない） */
+  /* ★👑だけ斜め */
   .decorMark.crown{
     transform: rotate(18deg);
     transform-origin: center;
     filter: drop-shadow(0 7px 12px rgba(0,0,0,.22));
   }
-
+  /* ★全絵文字を「右上」に統一 */
   .decor-tr{ right:-10px; top:-14px; }
-  .decor-tl{ left:-10px; top:-14px; }
-  .decor-bl{ left:-10px; bottom:-10px; }
-  .decor-br{ right:-10px; bottom:-10px; }
 
   .decorMenu{
     position:absolute;
@@ -808,17 +790,13 @@
     z-index: 9000;
     filter: drop-shadow(0 10px 16px rgba(0,0,0,.20));
   }
-  /* ★保存画像の👑だけ斜めにする（ここだけ追加・他は触らない） */
   .exportDecorMark.crown{
     transform: rotate(18deg);
     transform-origin: center;
     filter: drop-shadow(0 12px 18px rgba(0,0,0,.24));
   }
-
+  /* ★全絵文字を「右上」に統一 */
   .export-decor-tr{ right:-14px; top:-18px; }
-  .export-decor-tl{ left:-14px; top:-18px; }
-  .export-decor-bl{ left:-14px; bottom:-14px; }
-  .export-decor-br{ right:-14px; bottom:-14px; }
 </style>
 </head>
 
@@ -886,7 +864,6 @@
         <div class="search">
           <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
         </div>
-        <!-- ★練習生/練習生候補の切替ボタン -->
         <button class="mode" id="toggleListBtn" type="button" onclick="toggleCandidates(event)">練習生候補</button>
       </div>
       <div id="membersWrap">
@@ -898,9 +875,7 @@
 
 <div class="toast" id="toast">画像を生成中…</div>
 
-<!-- =========================
-     ★ 保存前お願いポップアップ（追加）
-     ========================= -->
+<!-- ★ 保存前お願いポップアップ -->
 <div id="shareModal" aria-hidden="true">
   <div class="shareCard" role="dialog" aria-modal="true">
     <div class="shareBody">
@@ -945,27 +920,34 @@
    ★ 合言葉設定（ここだけ変えればOK）
    ========================= */
 const PASSPHRASE = "P1CKSTAR";
-const PASS_STORAGE_KEY = "oshimaker_pass_ok_v1"; // 解除済みフラグ
-const PASS_TIME_KEY = "oshimaker_pass_ok_time_v1"; // ★解除時刻
-const PASS_TTL_MS = 60 * 60 * 1000; // ★1時間（ミリ秒）
+const PASS_STORAGE_KEY = "oshimaker_pass_ok_v1";
+const PASS_TIME_KEY = "oshimaker_pass_ok_time_v1";
+const PASS_TTL_MS = 60 * 60 * 1000;
 
 const HEADER_IMAGE_URL = "https://i.imgur.com/nYBRUdd.png";
-
-/* ★画像URLが未指定でも壊れないダミー */
 const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 
-/* 公式プロフィールURL組み立て */
 function profileUrl(pid){
   if(!pid) return "";
   return "https://produce101.jp/profile/detail/?lang=ja&id=" + encodeURIComponent(pid);
 }
 
 /* =========================
-   ★ 装飾（👑💘💕✨）状態（追加）
+   ★ 装飾（👑💘💕✨）状態（単一・入れ替え）
+   - 1人につき必ず1個まで
+   - 👑が付いてたら次の絵文字で置き換え
+   - 同じ絵文字をもう一回押したら「外す」
    ========================= */
-const DECOR_STORAGE_KEY = "oshimaker_decor_v1";
+const DECOR_STORAGE_KEY = "oshimaker_decor_v2"; // ★単一管理にしたのでv2
 let activeDecorPos = -1;
-let decorMap = loadDecorMap();
+let decorMap = loadDecorMap(); // { "memberIndex": "crown" | "heart1" | "heart2" | "sparkle" | "" }
+
+const DECOR_EMOJI = {
+  crown: "👑",
+  heart1: "💘",
+  heart2: "💕",
+  sparkle:"✨"
+};
 
 function loadDecorMap(){
   try{
@@ -979,24 +961,32 @@ function loadDecorMap(){
 function saveDecorMap(){
   try{ localStorage.setItem(DECOR_STORAGE_KEY, JSON.stringify(decorMap)); }catch(e){}
 }
-function getDecorForMember(memberIndex){
+function getDecorKindForMember(memberIndex){
   const key = String(memberIndex);
-  return decorMap[key] || {};
+  const v = decorMap[key];
+  return (typeof v === "string") ? v : "";
 }
+function setDecorKindForMember(memberIndex, kind){
+  const key = String(memberIndex);
+  if(!kind){
+    delete decorMap[key];
+  }else{
+    decorMap[key] = kind; // ★単一
+  }
+  saveDecorMap();
+}
+
 function toggleDecorByPos(pos, kind, ev){
   if(ev){ ev.stopPropagation(); ev.preventDefault(); }
   if(pos < 0 || pos >= selected.length) return;
 
   const memberIndex = selected[pos];
-  const key = String(memberIndex);
-  if(!decorMap[key]) decorMap[key] = { crown:false, heart1:false, heart2:false, sparkle:false };
+  const cur = getDecorKindForMember(memberIndex);
 
-  if(kind === "crown") decorMap[key].crown = !decorMap[key].crown;
-  if(kind === "heart1") decorMap[key].heart1 = !decorMap[key].heart1; // 💘
-  if(kind === "heart2") decorMap[key].heart2 = !decorMap[key].heart2; // 💕
-  if(kind === "sparkle") decorMap[key].sparkle = !decorMap[key].sparkle; // ✨
+  // 同じのを押したら外す / 違うのを押したら置き換え（常に1個）
+  const next = (cur === kind) ? "" : kind;
+  setDecorKindForMember(memberIndex, next);
 
-  saveDecorMap();
   activeDecorPos = -1;
   drawPyramid();
   drawExportPyramid();
@@ -1008,7 +998,6 @@ function openDecorMenu(pos, ev){
   drawPyramid();
 }
 
-/* 画面のどこかを押したらメニュー閉じる（追加） */
 document.addEventListener("click", function(){
   if(activeDecorPos !== -1){
     activeDecorPos = -1;
@@ -1023,7 +1012,6 @@ const traineesOnly = [
   {name:"オム・スアンカワーテン(AOM)", img:"https://i.imgur.com/dDIFJSc.png", pid:"aomsuungkavathin"},
   {name:"アーチャー・ウイ(ARCHER)", img:"https://i.imgur.com/5iIerqN.png", pid:"archeruy"},
   {name:"篠ヶ谷 歩夢(S.AYUMU)", img:"https://i.imgur.com/YJAdh8q.png", pid:"shinogayaayumu"},
-
   {name:"小林 千悟(CHISATO)", img:"https://i.imgur.com/Iu0hNBO.png", pid:"kobayashichisato"},
   {name:"加藤 大樹 (K.DAIKI)", img:"https://i.imgur.com/4fRk2EB.png", pid:"katodaiki"},
   {name:"カク・ドンミン(DONGMIN)", img:"https://i.imgur.com/xZSQqMh.png", pid:"kwakdongmin"},
@@ -1031,7 +1019,6 @@ const traineesOnly = [
   {name:"保里 瑛都(H.EITO)", img:"https://i.imgur.com/IAhs4ZA.png", pid:"horieito"},
   {name:"金田 栄都(K.EITO)", img:"https://i.imgur.com/tF7i1du.png", pid:"kanedaeito"},
   {name:"櫻井 楓真(FUMA)", img:"https://i.imgur.com/WIWI8Sx.png", pid:"sakuraifuma"},
-
   {name:"小笠原ジュゼッペ慧(GIUSEPPE)", img:"https://i.imgur.com/2oKn3Ma.jpeg", pid:"ogasawaragiuseppekei"},
   {name:"倉橋 吾槙(GOTEN)", img:"https://i.imgur.com/hlEjYqR.png", pid:"kurahashigoten"},
   {name:"堀尾 聖(HIJIRI)", img:"https://i.imgur.com/5Qb5dRJ.png", pid:"horiohijiri"},
@@ -1043,7 +1030,6 @@ const traineesOnly = [
   {name:"ジュアン・ジェイ(JAY)", img:"https://i.imgur.com/41jKNZX.png", pid:"chuangjay"},
   {name:"丸尾 尋一郎(JINICHIRO)", img:"https://i.imgur.com/83azYjx.png", pid:"maruojinichiro"},
   {name:"河邊 晟(JOE)", img:"https://i.imgur.com/DqUS1o6.png", pid:"kawabejoe"},
-
   {name:"シン・ジョンウク(JUNGUK)", img:"https://i.imgur.com/6cwEusK.jpeg", pid:"shinjunguk"},
   {name:"金安 純正(JUNSEI)", img:"https://i.imgur.com/juPhMDR.png", pid:"kaneyasujunsei"},
   {name:"宇野 海夢(KAIMU)", img:"https://i.imgur.com/QVliSyD.png", pid:"unokaimu"},
@@ -1063,7 +1049,6 @@ const traineesOnly = [
   {name:"堀野 蓮(H.REN)", img:"https://i.imgur.com/FQEx0JM.png", pid:"horinoren"},
   {name:"小清水 蓮(KO.REN)", img:"https://i.imgur.com/S8Ij9OZ.png", pid:"koshimizuren"},
   {name:"チェン・リッキー(RICKEY)", img:"https://i.imgur.com/DnnZVAT.png", pid:"chenrickey"},
-
   {name:"神元 理丘(RIKU)", img:"https://i.imgur.com/jwJ9CLd.png", pid:"kamimotoriku"},
   {name:"鳩場 陸人(H.RIKUTO)", img:"https://i.imgur.com/JdCFbCb.png", pid:"hatobarikuto"},
   {name:"今江 陸斗(I.RIKUTO)", img:"https://i.imgur.com/jiZZwJu.png", pid:"imaerikuto"},
@@ -1083,7 +1068,6 @@ const traineesOnly = [
   {name:"山下 柊(Y.SHU)", img:"https://i.imgur.com/642IX8o.png", pid:"yamashitashu"},
   {name:"パク・シヨン(SIYOUNG)", img:"https://i.imgur.com/wSokxJh.png", pid:"parksiyoung"},
   {name:"佐藤 碧空 (S.SORA)", img:"https://i.imgur.com/yF4WJJB.png", pid:"satosora"},
-
   {name:"東野 蒼汰(SOTA)", img:"https://i.imgur.com/GvLpwfo.png", pid:"tonosota"},
   {name:"藤牧 大雅(F.TAIGA)", img:"https://i.imgur.com/4G2hBRy.png", pid:"fujimakitaiga"},
   {name:"松田 太雅(M.TAIGA)", img:"https://i.imgur.com/tICsJFs.png", pid:"matsudataiga"},
@@ -1122,7 +1106,6 @@ const candidates = [
   {name:"イ・ヒョンジェ(HYUNJAE)", img:"https://i.imgur.com/wOhvKDu.png", pid:"leehyunjae"},
   {name:"阿部 樹(ITSUKI)", img:"https://i.imgur.com/TaTAc2L.png", pid:"abeitsuki"},
   {name:"イ・ジュンフン(JOONGHOON)", img:"https://i.imgur.com/4utwyOJ.png", pid:"leejoonghoon"},
-
   {name:"リュウ・カイチ(KAICHI)", img:"https://i.imgur.com/FGbdGcI.png", pid:"liukaichi"},
   {name:"黒﨑 貫汰(KANTA)", img:"https://i.imgur.com/j75eoO7.png", pid:"kurosakikanta"},
   {name:"黄 敬眞(KEISHIN)", img:"https://i.imgur.com/oE7w4D7.png", pid:"kokeishin"},
@@ -1183,7 +1166,6 @@ function alphaPart(full){
   return m ? "(" + m[1] + ")" : "";
 }
 
-/* 練習生/候補 切替（スクロール位置も維持） */
 function toggleCandidates(e){
   if(e && e.preventDefault) e.preventDefault();
 
@@ -1204,7 +1186,6 @@ function toggleCandidates(e){
   });
 }
 
-/* 幅・高さどっちも見て「11個が絶対に切れない」ようにslot/gapを決定 */
 function fitPyramidToViewport(){
   var headerEl = document.querySelector("header");
   var headerH = headerEl ? headerEl.getBoundingClientRect().height : 60;
@@ -1250,9 +1231,6 @@ function fitPyramidToViewport(){
   document.documentElement.style.setProperty("--gap", gap + "px");
 }
 
-/* =========================
-   2列カード描画 + profile
-   ========================= */
 function drawMembers(){
   var qEl = document.getElementById("search");
   var q = (qEl ? qEl.value : "").trim().toLowerCase();
@@ -1282,10 +1260,8 @@ function drawMembers(){
       </div>
     `;
 
-    /* カード本体タップで追加 */
     card.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
 
-    /* profile押下で追加が発火しないように止める */
     var link = card.querySelector(".profileLink");
     if(link){
       link.addEventListener("click", function(ev){
@@ -1372,20 +1348,17 @@ function drawPyramid(){
     for(var k=0;k<size;k++){
       var slot = document.createElement("div");
       if(idx < selected.length){
-        var m = trainees[selected[idx]];
+        var memberIndex = selected[idx];
+        var m = trainees[memberIndex];
 
-        /* ★装飾取得（追加） */
-        var d = getDecorForMember(selected[idx]);
+        var kind = getDecorKindForMember(memberIndex);
+        var emoji = kind ? (DECOR_EMOJI[kind] || "") : "";
 
         slot.className = "slot";
         slot.innerHTML = `
           <div class="avatar" onclick="openDecorMenu(${idx}, event)">
             <img src="${m.img}" alt="">
-
-            ${d.crown ? `<div class="decorMark crown decor-tr">👑</div>` : ``}
-            ${d.heart1 ? `<div class="decorMark decor-tl">💘</div>` : ``}
-            ${d.heart2 ? `<div class="decorMark decor-bl">💕</div>` : ``}
-            ${d.sparkle ? `<div class="decorMark decor-br">✨</div>` : ``}
+            ${emoji ? `<div class="decorMark ${kind} decor-tr">${emoji}</div>` : ``}
 
             ${activeDecorPos === idx ? `
               <div class="decorMenu" onclick="event.stopPropagation()">
@@ -1427,21 +1400,17 @@ function drawExportPyramid(){
     for(var k=0;k<size;k++){
       var slot = document.createElement("div");
       if(idx < selected.length){
-        var m = trainees[selected[idx]];
+        var memberIndex = selected[idx];
+        var m = trainees[memberIndex];
 
-        /* ★装飾取得（追加） */
-        var d = getDecorForMember(selected[idx]);
+        var kind = getDecorKindForMember(memberIndex);
+        var emoji = kind ? (DECOR_EMOJI[kind] || "") : "";
 
         slot.className = "exportSlot";
         slot.innerHTML = `
           <div class="exportAvatar">
             <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
-
-            ${d.crown ? `<div class="exportDecorMark crown export-decor-tr">👑</div>` : ``}
-            ${d.heart1 ? `<div class="exportDecorMark export-decor-tl">💘</div>` : ``}
-            ${d.heart2 ? `<div class="exportDecorMark export-decor-bl">💕</div>` : ``}
-            ${d.sparkle ? `<div class="exportDecorMark export-decor-br">✨</div>` : ``}
-
+            ${emoji ? `<div class="exportDecorMark ${kind} export-decor-tr">${emoji}</div>` : ``}
             <div class="exportRank">${idx+1}</div>
           </div>
           <div class="exportName">${displayName(m.name)}</div>
@@ -1457,9 +1426,6 @@ function drawExportPyramid(){
   });
 }
 
-/* =========================
-   ★ 保存前お願いポップアップ制御（追加）
-   ========================= */
 function openShareModal(){
   return new Promise(function(resolve){
     var modal = document.getElementById("shareModal");
@@ -1467,7 +1433,6 @@ function openShareModal(){
     var btnSave = document.getElementById("shareSave");
 
     if(!modal || !btnCancel || !btnSave){
-      // 念のため：見つからない場合は従来通り進める
       return resolve(true);
     }
 
@@ -1499,7 +1464,6 @@ function openShareModal(){
 }
 
 async function saveImage(){
-
   var okToSave = await openShareModal();
   if(!okToSave) return;
 
@@ -1544,10 +1508,8 @@ function isUnlocked(){
     const t  = parseInt(localStorage.getItem(PASS_TIME_KEY) || "0", 10);
     if(!ok || !t) return false;
 
-    // 1時間以内ならOK
     if(Date.now() - t < PASS_TTL_MS) return true;
 
-    // 期限切れ → ロックに戻す
     localStorage.removeItem(PASS_STORAGE_KEY);
     localStorage.removeItem(PASS_TIME_KEY);
     return false;
@@ -1570,13 +1532,11 @@ function showLock(){
   setTimeout(function(){ inp.focus(); }, 120);
 }
 function hideLockWithFx(){
-  // ロック画面を閉じる→演出→本体ふわっと表示
   document.getElementById("lockOverlay").classList.remove("show");
 
   var fx = document.getElementById("unlockFx");
   fx.classList.add("show");
 
-  // 900msアニメ＋少し余裕
   setTimeout(function(){
     fx.classList.remove("show");
     document.body.classList.remove("locked");
@@ -1592,7 +1552,6 @@ function tryUnlock(){
   }else{
     var err = document.getElementById("passErr");
     err.classList.add("show");
-    // ちょい揺れ感（簡易）
     var card = document.querySelector(".lockCard");
     if(card){
       card.animate(
@@ -1610,9 +1569,7 @@ function tryUnlock(){
   }
 }
 
-/* =========================
-   初期描画
-   ========================= */
+/* 初期描画 */
 drawMembers();
 drawPyramid();
 drawExportPyramid();
@@ -1629,11 +1586,9 @@ window.addEventListener("resize", function(){ fitPyramidToViewport(); });
     if(e.key === "Enter") tryUnlock();
   });
 
-  // 未解除ならロック表示
   if(!isUnlocked()){
     showLock();
   }else{
-    // 解除済みならロック状態にしない
     document.body.classList.remove("locked");
     document.getElementById("lockOverlay").classList.remove("show");
   }

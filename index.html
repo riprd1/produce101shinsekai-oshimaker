@@ -762,6 +762,13 @@
     z-index: 9000;
     filter: drop-shadow(0 6px 10px rgba(0,0,0,.18));
   }
+  /* ★👑だけ斜めにする（ここだけ追加・他は触らない） */
+  .decorMark.crown{
+    transform: rotate(18deg);
+    transform-origin: center;
+    filter: drop-shadow(0 7px 12px rgba(0,0,0,.22));
+  }
+
   .decor-tr{ right:-10px; top:-14px; }
   .decor-tl{ left:-10px; top:-14px; }
   .decor-bl{ left:-10px; bottom:-10px; }
@@ -801,6 +808,13 @@
     z-index: 9000;
     filter: drop-shadow(0 10px 16px rgba(0,0,0,.20));
   }
+  /* ★保存画像の👑だけ斜めにする（ここだけ追加・他は触らない） */
+  .exportDecorMark.crown{
+    transform: rotate(18deg);
+    transform-origin: center;
+    filter: drop-shadow(0 12px 18px rgba(0,0,0,.24));
+  }
+
   .export-decor-tr{ right:-14px; top:-18px; }
   .export-decor-tl{ left:-14px; top:-18px; }
   .export-decor-bl{ left:-14px; bottom:-14px; }
@@ -1368,7 +1382,7 @@ function drawPyramid(){
           <div class="avatar" onclick="openDecorMenu(${idx}, event)">
             <img src="${m.img}" alt="">
 
-            ${d.crown ? `<div class="decorMark decor-tr">👑</div>` : ``}
+            ${d.crown ? `<div class="decorMark crown decor-tr">👑</div>` : ``}
             ${d.heart1 ? `<div class="decorMark decor-tl">💘</div>` : ``}
             ${d.heart2 ? `<div class="decorMark decor-bl">💕</div>` : ``}
             ${d.sparkle ? `<div class="decorMark decor-br">✨</div>` : ``}
@@ -1423,7 +1437,7 @@ function drawExportPyramid(){
           <div class="exportAvatar">
             <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
 
-            ${d.crown ? `<div class="exportDecorMark export-decor-tr">👑</div>` : ``}
+            ${d.crown ? `<div class="exportDecorMark crown export-decor-tr">👑</div>` : ``}
             ${d.heart1 ? `<div class="exportDecorMark export-decor-tl">💘</div>` : ``}
             ${d.heart2 ? `<div class="exportDecorMark export-decor-bl">💕</div>` : ``}
             ${d.sparkle ? `<div class="exportDecorMark export-decor-br">✨</div>` : ``}

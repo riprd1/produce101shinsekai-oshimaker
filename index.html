@@ -497,163 +497,6 @@
   }
 
   /* =========================
-     ★ 合言葉ロックUI + 解除演出
-     ========================= */
-  body.locked{
-    overflow: hidden;
-    touch-action: none;
-  }
-
-  #lockOverlay{
-    position: fixed;
-    inset: 0;
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 18px;
-    background: rgba(0,0,0,.52);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-  #lockOverlay.show{ display:flex; }
-
-  .lockCard{
-    width: min(460px, 100%);
-    border-radius: 18px;
-    background: rgba(255,255,255,.92);
-    border: 1px solid rgba(255,255,255,.60);
-    box-shadow: 0 18px 50px rgba(0,0,0,.22);
-    overflow: hidden;
-  }
-  .lockHead{
-    padding: 14px 14px 10px;
-    border-bottom: 1px solid rgba(0,0,0,.06);
-    background:
-      radial-gradient(circle at 20% 30%, rgba(255,120,200,.24), transparent 45%),
-      radial-gradient(circle at 80% 40%, rgba(120,160,255,.22), transparent 50%),
-      linear-gradient(135deg, rgba(255,255,255,.92), rgba(245,248,255,.92));
-  }
-  .lockTitle{
-    margin:0;
-    font-weight: 1000;
-    letter-spacing: .04em;
-    font-size: 16px;
-  }
-  .lockNote{
-    margin: 8px 0 0;
-    font-size: 12px;
-    color: #555;
-    font-weight: 700;
-  }
-
-  .lockBody{
-    padding: 14px;
-  }
-  .lockLabel{
-    margin: 0 0 8px;
-    font-size: 13px;
-    font-weight: 900;
-    color:#222;
-  }
-  .lockInputRow{
-    display:flex;
-    gap: 10px;
-    align-items: center;
-  }
-  #passInput{
-    flex:1;
-    padding: 12px 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,.14);
-    outline: none;
-    font-size: 16px;
-    background: rgba(255,255,255,.92);
-  }
-  #unlockBtn{
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,.14);
-    background: #fff;
-    font-weight: 900;
-  }
-  #unlockBtn:active{ transform: scale(.98); }
-
-  .lockHint{
-    margin: 12px 0 0;
-    font-size: 13px;
-    font-weight: 800;
-    color:#333;
-  }
-  .tiktokBtn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    margin-top: 10px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: #111;
-    color: #fff;
-    text-decoration: none;
-    font-weight: 1000;
-    letter-spacing: .02em;
-  }
-  .tiktokBtn:active{ transform: scale(.98); }
-
-  .lockErr{
-    margin-top: 10px;
-    font-size: 12px;
-    font-weight: 900;
-    color: #d40000;
-    display:none;
-  }
-  .lockErr.show{ display:block; }
-
-  #unlockFx{
-    position: fixed;
-    inset: 0;
-    z-index: 100000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,.78);
-  }
-  #unlockFx.show{ display:flex; }
-
-  .fxText{
-    font-weight: 1000;
-    letter-spacing: .14em;
-    color: rgba(255,255,255,.95);
-    font-size: 22px;
-    padding: 14px 18px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.28);
-    background: rgba(255,255,255,.06);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    animation: fxPop 1900ms ease forwards;
-  }
-  @keyframes fxPop{
-    0%   { opacity: 0; transform: translateY(10px) scale(.96); filter: blur(6px); }
-    45%  { opacity: 1; transform: translateY(0) scale(1.00); filter: blur(0); }
-    100% { opacity: 0; transform: translateY(-6px) scale(1.02); filter: blur(4px); }
-  }
-
-  #app{
-    opacity: 1;
-    transform: none;
-    filter: none;
-    transition: opacity 420ms ease, transform 420ms ease, filter 420ms ease;
-  }
-  body.locked #app{
-    opacity: 0;
-    transform: translateY(10px) scale(.99);
-    filter: blur(6px);
-    pointer-events: none;
-    user-select: none;
-  }
-
-  /* =========================
      ★ 保存前お願いポップアップ（追加）
      ========================= */
   #shareModal{
@@ -801,37 +644,6 @@
 </head>
 
 <body>
-<!-- ★合言葉ロック -->
-<div id="lockOverlay" aria-hidden="false">
-  <div class="lockCard" role="dialog" aria-modal="true">
-    <div class="lockHead">
-      <h2 class="lockTitle">推しメーカーを使うには合言葉が必要です</h2>
-      <p class="lockNote">※合言葉は定期的に更新されます</p>
-
-<p style="margin:8px 0 0;font-size:13px;font-weight:900;color:#d40000;line-height:1.4;">
-⚠️フォロワー限定公開予定です<br>
-必ずTiktokのフォローをお願いします⚠️
-</p>
-    </div>
-    <div class="lockBody">
-      <p class="lockLabel">合言葉を入力</p>
-      <div class="lockInputRow">
-        <input id="passInput" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="合言葉を入力" />
-        <button id="unlockBtn" type="button">解除</button>
-      </div>
-      <div id="passErr" class="lockErr">合言葉が違います</div>
-
-      <div class="lockHint">最新動画から合言葉を確認してね！</div>
-      <a class="tiktokBtn" href="https://www.tiktok.com/@12agassi" target="_blank" rel="noopener noreferrer">TikTokへ移動</a>
-    </div>
-  </div>
-</div>
-
-<!-- ★解除演出 -->
-<div id="unlockFx" aria-hidden="true">
-  <div class="fxText">PRODUCE101JAPAN</div>
-</div>
-
 <header>
   <div class="topbar">
     <h1>日プ新世界 推しメーカー</h1>
@@ -919,10 +731,6 @@
 /* =========================
    ★ 合言葉設定（ここだけ変えればOK）
    ========================= */
-const PASSPHRASE = "P1CKSTAR";
-const PASS_STORAGE_KEY = "oshimaker_pass_ok_v1";
-const PASS_TIME_KEY = "oshimaker_pass_ok_time_v1";
-const PASS_TTL_MS = 60 * 60 * 1000;
 
 const HEADER_IMAGE_URL = "https://i.imgur.com/nYBRUdd.png";
 const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
@@ -1496,79 +1304,6 @@ async function saveImage(){
   }
 }
 
-/* =========================
-   ★ 合言葉ロック制御
-   ========================= */
-function norm(s){
-  return (s || "").trim();
-}
-function isUnlocked(){
-  try{
-    const ok = localStorage.getItem(PASS_STORAGE_KEY) === "1";
-    const t  = parseInt(localStorage.getItem(PASS_TIME_KEY) || "0", 10);
-    if(!ok || !t) return false;
-
-    if(Date.now() - t < PASS_TTL_MS) return true;
-
-    localStorage.removeItem(PASS_STORAGE_KEY);
-    localStorage.removeItem(PASS_TIME_KEY);
-    return false;
-  }catch(e){
-    return false;
-  }
-}
-function setUnlocked(){
-  try{
-    localStorage.setItem(PASS_STORAGE_KEY, "1");
-    localStorage.setItem(PASS_TIME_KEY, Date.now().toString());
-  }catch(e){}
-}
-function showLock(){
-  document.body.classList.add("locked");
-  document.getElementById("lockOverlay").classList.add("show");
-  document.getElementById("passErr").classList.remove("show");
-  var inp = document.getElementById("passInput");
-  inp.value = "";
-  setTimeout(function(){ inp.focus(); }, 120);
-}
-function hideLockWithFx(){
-  document.getElementById("lockOverlay").classList.remove("show");
-
-  var fx = document.getElementById("unlockFx");
-  fx.classList.add("show");
-
-  setTimeout(function(){
-    fx.classList.remove("show");
-    document.body.classList.remove("locked");
-  }, 2050);
-}
-function tryUnlock(){
-  var val = norm(document.getElementById("passInput").value);
-  var ok = (val === PASSPHRASE);
-
-  if(ok){
-    setUnlocked();
-    hideLockWithFx();
-  }else{
-    var err = document.getElementById("passErr");
-    err.classList.add("show");
-    var card = document.querySelector(".lockCard");
-    if(card){
-      card.animate(
-        [
-          {transform:"translateX(0)"},
-          {transform:"translateX(-6px)"},
-          {transform:"translateX(6px)"},
-          {transform:"translateX(-4px)"},
-          {transform:"translateX(4px)"},
-          {transform:"translateX(0)"}
-        ],
-        {duration: 260, easing:"ease-out"}
-      );
-    }
-  }
-}
-
 /* 初期描画 */
 drawMembers();
 drawPyramid();
@@ -1576,23 +1311,6 @@ drawExportPyramid();
 fitPyramidToViewport();
 window.addEventListener("resize", function(){ fitPyramidToViewport(); });
 
-/* ロック初期化 */
-(function initLock(){
-  var btn = document.getElementById("unlockBtn");
-  var inp = document.getElementById("passInput");
-
-  btn.addEventListener("click", tryUnlock);
-  inp.addEventListener("keydown", function(e){
-    if(e.key === "Enter") tryUnlock();
-  });
-
-  if(!isUnlocked()){
-    showLock();
-  }else{
-    document.body.classList.remove("locked");
-    document.getElementById("lockOverlay").classList.remove("show");
-  }
-})();
 </script>
 </body>
 </html>

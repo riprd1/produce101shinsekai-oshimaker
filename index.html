@@ -557,6 +557,145 @@
   }
   /* ★全絵文字を「右上」に統一 */
   .export-decor-tr{ right:-14px; top:-18px; }
+
+  /* =========================
+     ★ 起動時リンクPOPUP（追加）
+     ========================= */
+  #linkModal{
+    position: fixed;
+    inset: 0;
+    z-index: 100005;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0,0,0,.52);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  #linkModal.show{ display:flex; }
+
+  .linkCard{
+    width: min(520px, 100%);
+    border-radius: 18px;
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(255,255,255,.60);
+    box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    overflow: hidden;
+  }
+  .linkHead{
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,120,200,.18), transparent 45%),
+      radial-gradient(circle at 80% 40%, rgba(120,160,255,.16), transparent 50%),
+      linear-gradient(135deg, rgba(255,255,255,.92), rgba(245,248,255,.92));
+    position: relative;
+  }
+  .linkTitle{
+    margin:0;
+    font-weight: 1000;
+    letter-spacing: .04em;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  .linkClose{
+    position:absolute;
+    right: 10px;
+    top: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: rgba(255,255,255,.92);
+    font-weight: 1000;
+    font-size: 16px;
+    line-height: 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+  .linkClose:active{ transform: scale(.96); }
+
+  .linkBody{
+    padding: 14px;
+  }
+  .linkRow{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+    padding: 12px 10px;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 16px;
+    background: rgba(255,255,255,.92);
+    box-shadow: 0 10px 22px rgba(0,0,0,.08);
+  }
+  .linkLabel{
+    font-size: 14px;
+    font-weight: 1000;
+    color:#111;
+    letter-spacing: .02em;
+  }
+  .linkBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-decoration:none;
+    font-weight: 1000;
+    letter-spacing: .02em;
+    border-radius: 14px;
+    padding: 12px 14px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: #fff;
+    color:#111;
+    user-select:none;
+    cursor:pointer;
+    position: relative;
+    overflow:hidden;
+    transform: translateZ(0);
+    box-shadow: 0 10px 22px rgba(0,0,0,.10);
+    animation: linkPulse 1400ms ease-in-out infinite;
+  }
+  .linkBtn:active{
+    transform: scale(.98);
+    box-shadow: 0 6px 14px rgba(0,0,0,.12);
+  }
+  .linkBtn::after{
+    content:"";
+    position:absolute;
+    inset:-20%;
+    background: radial-gradient(circle at 30% 30%, rgba(0,128,255,.18), transparent 45%);
+    opacity: .0;
+    transition: opacity 220ms ease;
+    pointer-events:none;
+  }
+  .linkBtn:hover::after{ opacity: 1; }
+
+  @keyframes linkPulse{
+    0%   { transform: translateY(0); }
+    50%  { transform: translateY(-2px); }
+    100% { transform: translateY(0); }
+  }
+
+  .linkSpacer{ height: 12px; }
+
+  .linkFoot{
+    padding: 12px 14px 14px;
+    border-top: 1px solid rgba(0,0,0,.06);
+    display:flex;
+    justify-content:flex-end;
+    background: rgba(255,255,255,.92);
+  }
+  .linkOkBtn{
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .linkOkBtn:active{ transform: scale(.98); }
 </style>
 </head>
 
@@ -604,6 +743,34 @@
 
 <div class="toast" id="toast">画像を生成中…</div>
 
+<!-- ★ 起動時リンクPOPUP -->
+<div id="linkModal" aria-hidden="true">
+  <div class="linkCard" role="dialog" aria-modal="true">
+    <div class="linkHead">
+      <h2 class="linkTitle">リンク</h2>
+      <button class="linkClose" type="button" aria-label="close" onclick="closeLinkModal()">×</button>
+    </div>
+
+    <div class="linkBody">
+      <div class="linkRow">
+        <div class="linkLabel">日プ投票メーカーはこちら</div>
+        <a class="linkBtn" href="https://riprd1.github.io/fanvote-produce101japan/" rel="noopener noreferrer">【投票する】</a>
+      </div>
+
+      <div class="linkSpacer"></div>
+
+      <div class="linkRow">
+        <div class="linkLabel">枠交換メーカーはこちら</div>
+        <a class="linkBtn" href="https://riprd1.github.io/PRODUCE101shinsekaivotemaker/" rel="noopener noreferrer">【枠交換メーカー】</a>
+      </div>
+    </div>
+
+    <div class="linkFoot">
+      <button class="linkOkBtn" type="button" onclick="closeLinkModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div id="exportArea" aria-hidden="true">
   <div id="exportInner">
     <div id="exportBanner" class="exportBanner">
@@ -631,6 +798,22 @@ const FALLBACK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 function profileUrl(pid){
   if(!pid) return "";
   return "https://produce101.jp/profile/detail/?lang=ja&id=" + encodeURIComponent(pid);
+}
+
+/* =========================
+   ★ 起動時リンクPOPUP（追加）
+   ========================= */
+function openLinkModal(){
+  var modal = document.getElementById("linkModal");
+  if(!modal) return;
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+}
+function closeLinkModal(){
+  var modal = document.getElementById("linkModal");
+  if(!modal) return;
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
 }
 
 /* =========================
@@ -1164,6 +1347,9 @@ drawPyramid();
 drawExportPyramid();
 fitPyramidToViewport();
 window.addEventListener("resize", function(){ fitPyramidToViewport(); });
+
+/* 起動時POPUP表示 */
+openLinkModal();
 
 </script>
 </body>

@@ -250,6 +250,33 @@
     background:transparent;
   }
 
+  .classColorRow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom: 10px;
+  }
+  .classColorBtn{
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background:#fff;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .classColorBtn.on{
+    color:#fff;
+    border-color: transparent;
+    box-shadow: 0 8px 16px rgba(0,0,0,.10);
+  }
+  .classColorBtn.a.on{ background:#FF69B4; }
+  .classColorBtn.b.on{ background:#FF4500; }
+  .classColorBtn.c.on{ background:#FFD700; color:#111; }
+  .classColorBtn.d.on{ background:#00FA9A; color:#111; }
+  .classColorBtn.f.on{ background:#D3D3D3; color:#111; }
+
   #membersWrap{
     max-height: 52vh;
     overflow:auto;
@@ -734,6 +761,15 @@
         </div>
         <button class="mode" id="toggleListBtn" type="button" onclick="toggleCandidates(event)">練習生候補</button>
       </div>
+
+      <div class="classColorRow">
+        <button class="classColorBtn a" id="classBtnA" type="button" onclick="toggleClassColor('A')">A</button>
+        <button class="classColorBtn b" id="classBtnB" type="button" onclick="toggleClassColor('B')">B</button>
+        <button class="classColorBtn c" id="classBtnC" type="button" onclick="toggleClassColor('C')">C</button>
+        <button class="classColorBtn d" id="classBtnD" type="button" onclick="toggleClassColor('D')">D</button>
+        <button class="classColorBtn f" id="classBtnF" type="button" onclick="toggleClassColor('F')">F</button>
+      </div>
+
       <div id="membersWrap">
         <div id="members"></div>
       </div>
@@ -888,6 +924,176 @@ document.addEventListener("click", function(){
     drawPyramid();
   }
 });
+
+/* =========================
+   ★ 枠色クラス設定（追加）
+   ========================= */
+const CLASS_COLOR_STORAGE_KEY = "oshimaker_class_color_toggle_v1";
+let classColorToggle = loadClassColorToggle();
+
+const CLASS_COLORS = {
+  A: "#FF69B4",
+  B: "#FF4500",
+  C: "#FFD700",
+  D: "#00FA9A",
+  F: "#D3D3D3"
+};
+
+const MEMBER_CLASS_MAP = {
+  "安部結蘭":"A",
+  "照井康祐":"A",
+  "パクシヨン":"A",
+  "加藤大樹":"A",
+  "土田央修":"A",
+  "藤牧大雅":"A",
+  "ユヒョンスン":"A",
+  "アダムナガイ":"A",
+  "石田亮太":"A",
+  "岩城慎二":"A",
+  "大林悠成":"A",
+  "釼持吉成":"A",
+  "神元理丘":"A",
+  "オシンヘン":"A",
+  "岡田彪吾":"A",
+  "ユンジェヨン":"A",
+
+  "矢田佳暉":"B",
+  "中丸晏寿":"B",
+  "濱田永遠":"B",
+  "小林千悟":"B",
+  "東野蒼汰":"B",
+  "杉山竜司":"B",
+  "カクドンミン":"B",
+  "堀尾聖":"B",
+  "金倉拓未":"B",
+  "鳩場陸人":"B",
+  "アーチャーウイ":"B",
+  "香月誠太":"B",
+  "本荘晃":"B",
+  "藤芳辰弥":"B",
+  "関敬次郎":"B",
+  "ジュアンジェイ":"B",
+  "小笠原ジュゼッペ慧":"B",
+  "児島歩夢":"B",
+  "多比奏聖":"B",
+  "篠ヶ谷歩夢":"B",
+
+  "柳谷伊冴":"C",
+  "山下柊":"C",
+  "後藤結":"C",
+  "岡戸竜芽":"C",
+  "イヒョンジェ":"C",
+  "大瀬凜和":"C",
+  "上野琉偉":"C",
+  "末川瑛太":"C",
+  "オムスアンカワーテン":"C",
+  "甲斐陸也":"C",
+  "宮里拓利":"C",
+  "櫻井楓真":"C",
+  "佐藤碧空":"C",
+  "堀野蓮":"C",
+  "小野慶人":"C",
+  "森井輝":"C",
+  "南平達矢":"C",
+  "横山奏夢":"C",
+  "佐野由征":"C",
+  "シンジョンウク":"C",
+  "松田颯吾":"C",
+
+  "瑞慶覧太都":"D",
+  "チェンリッキー":"D",
+  "リーウェイゼ":"D",
+  "金安純正":"D",
+  "北林天虎":"D",
+  "宇野海夢":"D",
+  "宮崎真佑":"D",
+  "澤井星名":"D",
+  "丸尾尋一郎":"D",
+  "河合晃誠":"D",
+  "河邊晟":"D",
+  "西山賢人":"D",
+  "岡田侑磨":"D",
+  "市川大輝":"D",
+  "松田太雅":"D",
+  "今江陸斗":"D",
+  "山根武蔵":"D",
+  "浅香孝太郎":"D",
+  "黒﨑貫汰":"D",
+  "金田栄都":"D",
+  "青沼昂史朗":"D",
+
+  "倉橋吾槙":"F",
+  "髙松敬祐":"F",
+  "髙谷京平":"F",
+  "田中蒔":"F",
+  "小清水蓮":"F",
+  "飯塚亮賀":"F",
+  "西﨑柊":"F",
+  "増田倫希":"F",
+  "アギナルドトリスタンジェームス":"F",
+  "ヨハンエマニュエル":"F",
+  "板倉悠太":"F",
+  "髙城暖人":"F",
+  "リュウカイチ":"F",
+  "森明育":"F",
+  "小林蓮翔":"F"
+};
+
+function loadClassColorToggle(){
+  try{
+    const raw = localStorage.getItem(CLASS_COLOR_STORAGE_KEY);
+    const obj = raw ? JSON.parse(raw) : null;
+    if(obj && typeof obj === "object"){
+      return {
+        A: !!obj.A,
+        B: !!obj.B,
+        C: !!obj.C,
+        D: !!obj.D,
+        F: !!obj.F
+      };
+    }
+  }catch(e){}
+  return { A:false, B:false, C:false, D:false, F:false };
+}
+function saveClassColorToggle(){
+  try{ localStorage.setItem(CLASS_COLOR_STORAGE_KEY, JSON.stringify(classColorToggle)); }catch(e){}
+}
+function updateClassColorButtons(){
+  ["A","B","C","D","F"].forEach(function(cls){
+    var el = document.getElementById("classBtn" + cls);
+    if(!el) return;
+    el.classList.toggle("on", !!classColorToggle[cls]);
+  });
+}
+function toggleClassColor(cls){
+  if(!classColorToggle.hasOwnProperty(cls)) return;
+  classColorToggle[cls] = !classColorToggle[cls];
+  saveClassColorToggle();
+  updateClassColorButtons();
+  drawPyramid();
+  drawExportPyramid();
+}
+function normalizeMemberClassName(name){
+  return (name || "")
+    .replace(/\s+/g, "")
+    .replace(/[()（）]/g, "")
+    .replace(/・/g, "")
+    .replace(/[‧･]/g, "")
+    .trim();
+}
+function getMemberClassByIndex(memberIndex){
+  var m = trainees[memberIndex];
+  if(!m) return "";
+  var key = normalizeMemberClassName(displayName(m.name));
+  return MEMBER_CLASS_MAP[key] || "";
+}
+function getMemberBorderColor(memberIndex){
+  var cls = getMemberClassByIndex(memberIndex);
+  if(cls && classColorToggle[cls]){
+    return CLASS_COLORS[cls] || "var(--blue)";
+  }
+  return "var(--blue)";
+}
 
 /* ====== traineesOnly（練習生） ====== */
 const traineesOnly = [
@@ -1234,13 +1440,14 @@ function drawPyramid(){
       if(idx < selected.length){
         var memberIndex = selected[idx];
         var m = trainees[memberIndex];
+        var borderColor = getMemberBorderColor(memberIndex);
 
         var kind = getDecorKindForMember(memberIndex);
         var emoji = kind ? (DECOR_EMOJI[kind] || "") : "";
 
         slot.className = "slot";
         slot.innerHTML = `
-          <div class="avatar" onclick="openDecorMenu(${idx}, event)">
+          <div class="avatar" style="border-color:${borderColor};" onclick="openDecorMenu(${idx}, event)">
             <img src="${m.img}" alt="">
             ${emoji ? `<div class="decorMark ${kind} decor-tr">${emoji}</div>` : ``}
 
@@ -1253,7 +1460,7 @@ function drawPyramid(){
               </div>
             ` : ``}
 
-            <div class="rank">${idx+1}</div>
+            <div class="rank" style="background:${borderColor};">${idx+1}</div>
           </div>
           <div class="name">${displayName(m.name)}</div>
           <div class="reorder">
@@ -1286,16 +1493,17 @@ function drawExportPyramid(){
       if(idx < selected.length){
         var memberIndex = selected[idx];
         var m = trainees[memberIndex];
+        var borderColor = getMemberBorderColor(memberIndex);
 
         var kind = getDecorKindForMember(memberIndex);
         var emoji = kind ? (DECOR_EMOJI[kind] || "") : "";
 
         slot.className = "exportSlot";
         slot.innerHTML = `
-          <div class="exportAvatar">
+          <div class="exportAvatar" style="border-color:${borderColor};">
             <div class="exportPhoto" style="background-image:url('${m.img}')"></div>
             ${emoji ? `<div class="exportDecorMark ${kind} export-decor-tr">${emoji}</div>` : ``}
-            <div class="exportRank">${idx+1}</div>
+            <div class="exportRank" style="background:${borderColor};">${idx+1}</div>
           </div>
           <div class="exportName">${displayName(m.name)}</div>
         `;
@@ -1346,6 +1554,7 @@ drawMembers();
 drawPyramid();
 drawExportPyramid();
 fitPyramidToViewport();
+updateClassColorButtons();
 window.addEventListener("resize", function(){ fitPyramidToViewport(); });
 
 /* 起動時POPUP表示 */

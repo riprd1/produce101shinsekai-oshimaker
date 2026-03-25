@@ -250,17 +250,6 @@
     background:transparent;
   }
 
-  .listTitle{
-    padding: 11px 12px;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    background: #fff;
-    font-size: 14px;
-    font-weight: 900;
-    color:#111;
-    white-space: nowrap;
-  }
-
   .classColorRow{
     display:flex;
     gap:8px;
@@ -320,12 +309,6 @@
   }
   .memberCard:active{ transform: scale(.995); }
 
-  .memberCard.eliminated{
-    opacity: .55;
-    filter: grayscale(1);
-    cursor: default;
-  }
-
   .memberPhoto{
     width: 100%;
     height: 108px;
@@ -367,23 +350,6 @@
   .favBtn.on{
     color: #FFD700;
     text-shadow: 0 1px 0 rgba(0,0,0,.08);
-  }
-
-  .eliminatedBadge{
-    position:absolute;
-    left:50%;
-    top:50%;
-    transform: translate(-50%,-50%);
-    background: rgba(70,70,70,.88);
-    color:#fff;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    z-index: 4;
-    pointer-events:none;
-    box-shadow: 0 8px 18px rgba(0,0,0,.18);
   }
 
   .memberInfo{
@@ -819,7 +785,7 @@
         <div class="search">
           <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
         </div>
-        <div class="listTitle" id="toggleListLabel">練習生一覧</div>
+        <button class="mode" id="toggleListBtn" type="button" onclick="toggleCandidates(event)">練習生候補</button>
       </div>
 
       <div class="classColorRow">
@@ -1192,49 +1158,11 @@ function toggleFavorite(memberIndex, ev){
 }
 function sortMemberIndexesForDisplay(indexes){
   return indexes.slice().sort(function(a, b){
-    const ae = isEliminated(a) ? 1 : 0;
-    const be = isEliminated(b) ? 1 : 0;
-    if(ae !== be) return ae - be;
-
     const af = isFavorite(a) ? 1 : 0;
     const bf = isFavorite(b) ? 1 : 0;
     if(af !== bf) return bf - af;
-
     return a - b;
   });
-}
-
-/* =========================
-   ★ 脱落機能（追加）
-   ========================= */
-const ELIMINATED_MEMBER_MAP = {
-  "川村珀斗": true,
-  "佐川太一": true,
-  "阿部樹": true,
-  "イジュンフン": true,
-  "小澤昂心": true,
-  "小林廣": true,
-  "マイケルミンマカフリ": true,
-  "パトリックファンレ": true,
-  "笹原蓮": true,
-  "笠原蓮": true,
-  "江口蓮翔": true,
-  "落合利温": true,
-  "小谷内瑠嘉": true,
-  "齋藤惺": true,
-  "齊藤惺": true,
-  "藤本真成": true,
-  "飯田柊馬": true,
-  "大澤佑冴": true,
-  "藤井雄聖": true,
-  "岡本佑斗": true
-};
-
-function isEliminated(memberIndex){
-  var m = trainees[memberIndex];
-  if(!m) return false;
-  var key = normalizeMemberClassName(displayName(m.name));
-  return !!ELIMINATED_MEMBER_MAP[key];
 }
 
 /* ====== traineesOnly（練習生） ====== */
@@ -1376,6 +1304,9 @@ const STORAGE_KEY = "oshimaker_selected_final_v5";
 let reorderMode = false;
 let selected = loadSelected();
 
+/* 表示切替状態（初期は練習生表示） */
+let showingCandidates = false;
+
 /* バナー画像反映 */
 (function setupBanners(){
   const banner = document.getElementById("banner");
@@ -1393,6 +1324,26 @@ function displayName(full){
 function alphaPart(full){
   const m = (full||"").match(/\(([^)]*)\)/);
   return m ? "(" + m[1] + ")" : "";
+}
+
+function toggleCandidates(e){
+  if(e && e.preventDefault) e.preventDefault();
+
+  var wrap = document.getElementById("membersWrap");
+  var listScroll = wrap ? wrap.scrollTop : 0;
+  var winY = window.scrollY;
+
+  showingCandidates = !showingCandidates;
+
+  var btn = document.getElementById("toggleListBtn");
+  btn.textContent = showingCandidates ? "練習生" : "練習生候補";
+
+  drawMembers();
+
+  requestAnimationFrame(function(){
+    if(wrap) wrap.scrollTop = listScroll;
+    window.scrollTo(0, winY);
+  });
 }
 
 function fitPyramidToViewport(){
@@ -1446,8 +1397,11 @@ function drawMembers(){
   var membersEl = document.getElementById("members");
   membersEl.innerHTML = "";
 
+  var start = showingCandidates ? TRAINEES_COUNT : 0;
+  var end   = showingCandidates ? trainees.length : TRAINEES_COUNT;
+
   var displayIndexes = [];
-  for(var i=0; i<trainees.length; i++){
+  for(var i=start; i<end; i++){
     var m = trainees[i];
     var hay = (m.name || "").toLowerCase();
     if(q && hay.indexOf(q) === -1) continue;
@@ -1464,9 +1418,6 @@ function drawMembers(){
     card.className = "memberCard";
     if(selected.indexOf(i) !== -1) card.classList.add("selected");
 
-    var eliminated = isEliminated(i);
-    if(eliminated) card.classList.add("eliminated");
-
     var pidUrl = profileUrl(m.pid);
     var favOn = isFavorite(i);
 
@@ -1474,7 +1425,6 @@ function drawMembers(){
       ${pidUrl ? `<a class="profileLink" href="${pidUrl}" target="_blank" rel="noopener noreferrer">profile</a>` : ""}
       <div class="memberPhoto">
         <button class="favBtn ${favOn ? "on" : ""}" type="button" aria-label="favorite">${favOn ? "★" : "☆"}</button>
-        ${eliminated ? `<div class="eliminatedBadge">脱落</div>` : ``}
         <img src="${m.img || FALLBACK_IMG}" alt="">
       </div>
       <div class="memberInfo">
@@ -1483,9 +1433,7 @@ function drawMembers(){
       </div>
     `;
 
-    if(!eliminated){
-      card.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
-    }
+    card.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
 
     var link = card.querySelector(".profileLink");
     if(link){
@@ -1508,7 +1456,6 @@ function drawMembers(){
 }
 
 function add(i){
-  if(isEliminated(i)) return;
   if(selected.length >= 11){ alert("11人まで！"); return; }
   if(selected.indexOf(i) !== -1) return;
 

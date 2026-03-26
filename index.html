@@ -250,6 +250,17 @@
     background:transparent;
   }
 
+  .listTitle{
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 900;
+    color:#111;
+    white-space: nowrap;
+  }
+
   .classColorRow{
     display:flex;
     gap:8px;
@@ -309,6 +320,12 @@
   }
   .memberCard:active{ transform: scale(.995); }
 
+  .memberCard.eliminated{
+    opacity: .55;
+    filter: grayscale(1);
+    cursor: default;
+  }
+
   .memberPhoto{
     width: 100%;
     height: 108px;
@@ -350,6 +367,23 @@
   .favBtn.on{
     color: #FFD700;
     text-shadow: 0 1px 0 rgba(0,0,0,.08);
+  }
+
+  .eliminatedBadge{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform: translate(-50%,-50%);
+    background: rgba(70,70,70,.88);
+    color:#fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    z-index: 4;
+    pointer-events:none;
+    box-shadow: 0 8px 18px rgba(0,0,0,.18);
   }
 
   .memberInfo{
@@ -765,7 +799,7 @@
   <main>
     <div class="card" id="pyramidCard">
       <div id="banner" class="banner">
-        <div class="bannerTitle">AUDITION PICK • YOUR TOP 11</div>
+        <div class="bannerTitle">AUDITION PICK • YOUR TOP 12</div>
       </div>
 
       <div class="pyramidWrap" id="pyramidWrap">
@@ -785,7 +819,7 @@
         <div class="search">
           <input id="search" type="text" placeholder="Search" oninput="drawMembers()" />
         </div>
-        <button class="mode" id="toggleListBtn" type="button" onclick="toggleCandidates(event)">練習生候補</button>
+        <div class="listTitle" id="toggleListLabel">練習生一覧</div>
       </div>
 
       <div class="classColorRow">
@@ -836,7 +870,7 @@
 <div id="exportArea" aria-hidden="true">
   <div id="exportInner">
     <div id="exportBanner" class="exportBanner">
-      <div class="exportTitlePill">AUDITION PICK • YOUR TOP 11</div>
+      <div class="exportTitlePill">AUDITION PICK • YOUR TOP 12</div>
     </div>
 
     <div class="exportBody">
@@ -884,9 +918,9 @@ function closeLinkModal(){
    - 👑が付いてたら次の絵文字で置き換え
    - 同じ絵文字をもう一回押したら「外す」
    ========================= */
-const DECOR_STORAGE_KEY = "oshimaker_decor_v2"; // ★単一管理にしたのでv2
+const DECOR_STORAGE_KEY = "oshimaker_decor_v2";
 let activeDecorPos = -1;
-let decorMap = loadDecorMap(); // { "memberIndex": "crown" | "heart1" | "heart2" | "sparkle" | "" }
+let decorMap = loadDecorMap();
 
 const DECOR_EMOJI = {
   crown: "👑",
@@ -917,7 +951,7 @@ function setDecorKindForMember(memberIndex, kind){
   if(!kind){
     delete decorMap[key];
   }else{
-    decorMap[key] = kind; // ★単一
+    decorMap[key] = kind;
   }
   saveDecorMap();
 }
@@ -928,8 +962,6 @@ function toggleDecorByPos(pos, kind, ev){
 
   const memberIndex = selected[pos];
   const cur = getDecorKindForMember(memberIndex);
-
-  // 同じのを押したら外す / 違うのを押したら置き換え（常に1個）
   const next = (cur === kind) ? "" : kind;
   setDecorKindForMember(memberIndex, next);
 
@@ -1158,11 +1190,49 @@ function toggleFavorite(memberIndex, ev){
 }
 function sortMemberIndexesForDisplay(indexes){
   return indexes.slice().sort(function(a, b){
+    const ae = isEliminated(a) ? 1 : 0;
+    const be = isEliminated(b) ? 1 : 0;
+    if(ae !== be) return ae - be;
+
     const af = isFavorite(a) ? 1 : 0;
     const bf = isFavorite(b) ? 1 : 0;
     if(af !== bf) return bf - af;
+
     return a - b;
   });
+}
+
+/* =========================
+   ★ 脱落機能（追加）
+   ========================= */
+const ELIMINATED_MEMBER_MAP = {
+  "川村珀斗": true,
+  "佐川太一": true,
+  "阿部樹": true,
+  "イジュンフン": true,
+  "小澤昂心": true,
+  "小林廣": true,
+  "マイケルミンマカフリ": true,
+  "パトリックファンレ": true,
+  "笹原蓮": true,
+  "笠原蓮": true,
+  "江口蓮翔": true,
+  "落合利温": true,
+  "小谷内瑠嘉": true,
+  "齋藤惺": true,
+  "齊藤惺": true,
+  "藤本真成": true,
+  "飯田柊馬": true,
+  "大澤佑冴": true,
+  "藤井雄聖": true,
+  "岡本佑斗": true
+};
+
+function isEliminated(memberIndex){
+  var m = trainees[memberIndex];
+  if(!m) return false;
+  var key = normalizeMemberClassName(displayName(m.name));
+  return !!ELIMINATED_MEMBER_MAP[key];
 }
 
 /* ====== traineesOnly（練習生） ====== */
@@ -1252,7 +1322,6 @@ const traineesOnly = [
   {name:"板倉 悠太(YUTA)", img:"https://i.imgur.com/j6IlxeD.png", pid:"itakurayuta"}
 ];
 
-/* ====== candidates（練習生候補） ====== */
 const candidates = [
   {name:"本荘 晃(AKIRA)", img:"https://i.imgur.com/p976l8j.jpeg", pid:"honjoakira"},
   {name:"児島 歩夢(K.AYUMU)", img:"https://i.imgur.com/1jtcgbB.png", pid:"kojimaayumu"},
@@ -1296,16 +1365,12 @@ const candidates = [
 
 /* trainees = 結合 */
 const trainees = traineesOnly.concat(candidates);
-const TRAINEES_COUNT = traineesOnly.length;
 
-const rowSizes = [1,2,3,5];
+const rowSizes = [1,2,4,5];
 const STORAGE_KEY = "oshimaker_selected_final_v5";
 
 let reorderMode = false;
 let selected = loadSelected();
-
-/* 表示切替状態（初期は練習生表示） */
-let showingCandidates = false;
 
 /* バナー画像反映 */
 (function setupBanners(){
@@ -1324,26 +1389,6 @@ function displayName(full){
 function alphaPart(full){
   const m = (full||"").match(/\(([^)]*)\)/);
   return m ? "(" + m[1] + ")" : "";
-}
-
-function toggleCandidates(e){
-  if(e && e.preventDefault) e.preventDefault();
-
-  var wrap = document.getElementById("membersWrap");
-  var listScroll = wrap ? wrap.scrollTop : 0;
-  var winY = window.scrollY;
-
-  showingCandidates = !showingCandidates;
-
-  var btn = document.getElementById("toggleListBtn");
-  btn.textContent = showingCandidates ? "練習生" : "練習生候補";
-
-  drawMembers();
-
-  requestAnimationFrame(function(){
-    if(wrap) wrap.scrollTop = listScroll;
-    window.scrollTo(0, winY);
-  });
 }
 
 function fitPyramidToViewport(){
@@ -1397,11 +1442,8 @@ function drawMembers(){
   var membersEl = document.getElementById("members");
   membersEl.innerHTML = "";
 
-  var start = showingCandidates ? TRAINEES_COUNT : 0;
-  var end   = showingCandidates ? trainees.length : TRAINEES_COUNT;
-
   var displayIndexes = [];
-  for(var i=start; i<end; i++){
+  for(var i=0; i<trainees.length; i++){
     var m = trainees[i];
     var hay = (m.name || "").toLowerCase();
     if(q && hay.indexOf(q) === -1) continue;
@@ -1418,6 +1460,9 @@ function drawMembers(){
     card.className = "memberCard";
     if(selected.indexOf(i) !== -1) card.classList.add("selected");
 
+    var eliminated = isEliminated(i);
+    if(eliminated) card.classList.add("eliminated");
+
     var pidUrl = profileUrl(m.pid);
     var favOn = isFavorite(i);
 
@@ -1425,6 +1470,7 @@ function drawMembers(){
       ${pidUrl ? `<a class="profileLink" href="${pidUrl}" target="_blank" rel="noopener noreferrer">profile</a>` : ""}
       <div class="memberPhoto">
         <button class="favBtn ${favOn ? "on" : ""}" type="button" aria-label="favorite">${favOn ? "★" : "☆"}</button>
+        ${eliminated ? `<div class="eliminatedBadge">脱落</div>` : ``}
         <img src="${m.img || FALLBACK_IMG}" alt="">
       </div>
       <div class="memberInfo">
@@ -1433,7 +1479,9 @@ function drawMembers(){
       </div>
     `;
 
-    card.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
+    if(!eliminated){
+      card.addEventListener("click", (function(idx){ return function(){ add(idx); }; })(i));
+    }
 
     var link = card.querySelector(".profileLink");
     if(link){
@@ -1456,7 +1504,8 @@ function drawMembers(){
 }
 
 function add(i){
-  if(selected.length >= 11){ alert("11人まで！"); return; }
+  if(isEliminated(i)) return;
+  if(selected.length >= 12){ alert("12人まで！"); return; }
   if(selected.indexOf(i) !== -1) return;
 
   selected.push(i);

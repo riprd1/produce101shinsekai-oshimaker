@@ -733,21 +733,7 @@ function profileUrl(pid){
   return "https://produce101.jp/profile/detail/?lang=ja&id=" + encodeURIComponent(pid);
 }
 
-/* =========================
-   ★ 起動時リンクPOPUP（追加）
-   ========================= */
-function openLinkModal(){
-  var modal = document.getElementById("linkModal");
-  if(!modal) return;
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-}
-function closeLinkModal(){
-  var modal = document.getElementById("linkModal");
-  if(!modal) return;
-  modal.classList.remove("show");
-  modal.setAttribute("aria-hidden", "true");
-}
+
 
 /* =========================
    ★ 装飾（👑💘💕✨）状態（単一・入れ替え）
@@ -1543,8 +1529,6 @@ fitPyramidToViewport();
 updateClassColorButtons();
 window.addEventListener("resize", function(){ fitPyramidToViewport(); });
 
-/* 起動時POPUP表示 */
-openLinkModal();
 
 </script>
 </body>

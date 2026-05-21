@@ -1168,34 +1168,49 @@ function sortMemberIndexesForDisplay(indexes){
 /* =========================
    ★ 脱落機能（追加）
    ========================= */
-const ELIMINATED_MEMBER_MAP = {
-  "川村珀斗": true,
-  "佐川太一": true,
-  "阿部樹": true,
-  "イジュンフン": true,
-  "小澤昂心": true,
-  "小林廣": true,
-  "マイケルミンマカフリ": true,
-  "パトリックファンレ": true,
-  "笹原蓮": true,
-  "笠原蓮": true,
-  "江口蓮翔": true,
-  "落合利温": true,
-  "小谷内瑠嘉": true,
-  "齋藤惺": true,
-  "齊藤惺": true,
-  "藤本真成": true,
-  "飯田柊馬": true,
-  "大澤佑冴": true,
-  "藤井雄聖": true,
-  "岡本佑斗": true
+const ACTIVE_MEMBER_MAP = {
+  "オシンヘン": true,
+  "矢田佳暉": true,
+  "釼持吉成": true,
+  "パクシヨン": true,
+  "熊部拓斗": true,
+  "土田央修": true,
+  "飯塚亮賀": true,
+  "照井康祐": true,
+  "山下柊": true,
+  "青沼昂史朗": true,
+  "倉橋吾槙": true,
+  "チェンリッキー": true,
+  "安部結蘭": true,
+  "岡田侑磨": true,
+  "加藤大樹": true,
+  "ユンジェヨン": true,
+  "小野慶人": true,
+  "後藤結": true,
+  "杉山竜司": true,
+  "大林悠成": true,
+  "石田亮太": true,
+  "ユヒョンスン": true,
+  "イヒョンジェ": true,
+  "柳谷伊冴": true,
+  "浅香孝太郎": true,
+  "小清水蓮": true,
+  "濱田永遠": true,
+  "篠ヶ谷歩夢": true,
+  "小林千悟": true,
+  "小笠原ジュゼッペ慧": true,
+  "リュウカイチ": true,
+  "横山奏夢": true,
+  "今江陸斗": true,
+  "アダムナガイ": true,
+  "田中蒔": true
 };
 
 function isEliminated(memberIndex){
   var m = trainees[memberIndex];
   if(!m) return false;
   var key = normalizeMemberClassName(displayName(m.name));
-  return !!ELIMINATED_MEMBER_MAP[key];
+  return !ACTIVE_MEMBER_MAP[key];
 }
 
 /* ====== traineesOnly（練習生） ====== */

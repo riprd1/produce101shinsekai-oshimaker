@@ -645,6 +645,53 @@
   /* ★全絵文字を「右上」に統一 */
   .export-decor-tr{ right:-14px; top:-18px; }
 
+  .positionModeBtn{
+    padding: 9px 12px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background:#fff;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .positionModeBtn.on{
+    background:#111;
+    color:#fff;
+    border-color:#111;
+  }
+
+  #positionPanel{
+    display:none;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    background: rgba(255,255,255,.94);
+  }
+  #positionPanel.show{ display:block; }
+
+  .positionGuide{
+    font-size: 12px;
+    font-weight: 900;
+    color:#555;
+    margin-bottom: 8px;
+  }
+  .positionChoices{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .positionChoices button{
+    padding: 9px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .avatar.positionTarget{
+    box-shadow: 0 0 0 4px rgba(0,0,0,.18), 0 8px 18px rgba(0,0,0,.10);
+  }
+
   
 </style>
 </head>
@@ -691,6 +738,18 @@
         <button class="classColorBtn c" id="classBtnC" type="button" onclick="toggleClassColor('C')">C</button>
         <button class="classColorBtn d" id="classBtnD" type="button" onclick="toggleClassColor('D')">D</button>
         <button class="classColorBtn f" id="classBtnF" type="button" onclick="toggleClassColor('F')">F</button>
+        <button class="positionModeBtn" id="positionModeBtn" type="button" onclick="togglePositionPanel()">ポジション設定</button>
+      </div>
+
+      <div id="positionPanel">
+        <div class="positionGuide">上の選択済みメンバーをタップして、ポジションを選択</div>
+        <div class="positionChoices">
+          <button type="button" onclick="setPositionForTarget('dance')">ダンス</button>
+          <button type="button" onclick="setPositionForTarget('vocal')">ボーカル</button>
+          <button type="button" onclick="setPositionForTarget('rap')">ラップ</button>
+          <button type="button" onclick="setPositionForTarget('all')">オールラウンダー</button>
+          <button type="button" onclick="setPositionForTarget('')">解除</button>
+        </div>
       </div>
 
       <div id="membersWrap">
@@ -701,8 +760,6 @@
 </div>
 
 <div class="toast" id="toast">画像を生成中…</div>
-
-
 
 <div id="exportArea" aria-hidden="true">
   <div id="exportInner">
@@ -732,8 +789,6 @@ function profileUrl(pid){
   if(!pid) return "";
   return "https://produce101.jp/profile/detail/?lang=ja&id=" + encodeURIComponent(pid);
 }
-
-
 
 /* =========================
    ★ 装飾（👑💘💕✨）状態（単一・入れ替え）
@@ -793,6 +848,11 @@ function toggleDecorByPos(pos, kind, ev){
   drawExportPyramid();
 }
 function openDecorMenu(pos, ev){
+  if(positionMode){
+    selectPositionTarget(pos, ev);
+    return;
+  }
+
   if(ev){ ev.stopPropagation(); ev.preventDefault(); }
   if(pos < 0 || pos >= selected.length) return;
   activeDecorPos = (activeDecorPos === pos) ? -1 : pos;
@@ -819,6 +879,73 @@ const CLASS_COLORS = {
   D: "#00FA9A",
   F: "#D3D3D3"
 };
+
+const POSITION_STORAGE_KEY = "oshimaker_position_map_v1";
+let positionMode = false;
+let activePositionPos = -1;
+let positionMap = loadPositionMap();
+
+const POSITION_COLORS = {
+  dance: "#ff0000",
+  vocal: "#0080ff",
+  rap: "#FFD700",
+  all: "#111111"
+};
+
+function loadPositionMap(){
+  try{
+    const raw = localStorage.getItem(POSITION_STORAGE_KEY);
+    const obj = raw ? JSON.parse(raw) : {};
+    return (obj && typeof obj === "object") ? obj : {};
+  }catch(e){
+    return {};
+  }
+}
+function savePositionMap(){
+  try{ localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(positionMap)); }catch(e){}
+}
+function getPositionKindForMember(memberIndex){
+  return positionMap[String(memberIndex)] || "";
+}
+function setPositionKindForMember(memberIndex, kind){
+  const key = String(memberIndex);
+  if(!kind){
+    delete positionMap[key];
+  }else{
+    positionMap[key] = kind;
+  }
+  savePositionMap();
+}
+function togglePositionPanel(){
+  positionMode = !positionMode;
+  activePositionPos = -1;
+
+  var panel = document.getElementById("positionPanel");
+  var btn = document.getElementById("positionModeBtn");
+
+  if(panel) panel.classList.toggle("show", positionMode);
+  if(btn) btn.classList.toggle("on", positionMode);
+
+  drawPyramid();
+}
+function selectPositionTarget(pos, ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  if(pos < 0 || pos >= selected.length) return;
+  activePositionPos = pos;
+  drawPyramid();
+}
+function setPositionForTarget(kind){
+  if(activePositionPos < 0 || activePositionPos >= selected.length){
+    alert("先に上のメンバーをタップして選択してね");
+    return;
+  }
+
+  var memberIndex = selected[activePositionPos];
+  setPositionKindForMember(memberIndex, kind);
+
+  drawPyramid();
+  drawExportPyramid();
+}
 
 const MEMBER_CLASS_MAP = {
   "安部結蘭":"A",
@@ -977,6 +1104,11 @@ function getMemberClassByIndex(memberIndex){
   return MEMBER_CLASS_MAP[key] || "";
 }
 function getMemberBorderColor(memberIndex){
+  var pos = getPositionKindForMember(memberIndex);
+  if(pos && POSITION_COLORS[pos]){
+    return POSITION_COLORS[pos];
+  }
+
   var cls = getMemberClassByIndex(memberIndex);
   if(cls && classColorToggle[cls]){
     return CLASS_COLORS[cls] || "var(--blue)";
@@ -1419,7 +1551,7 @@ function drawPyramid(){
 
         slot.className = "slot";
         slot.innerHTML = `
-          <div class="avatar" style="border-color:${borderColor};" onclick="openDecorMenu(${idx}, event)">
+          <div class="avatar ${activePositionPos === idx ? "positionTarget" : ""}" style="border-color:${borderColor};" onclick="openDecorMenu(${idx}, event)">
             <img src="${m.img}" alt="">
             ${emoji ? `<div class="decorMark ${kind} decor-tr">${emoji}</div>` : ``}
 
@@ -1528,7 +1660,6 @@ drawExportPyramid();
 fitPyramidToViewport();
 updateClassColorButtons();
 window.addEventListener("resize", function(){ fitPyramidToViewport(); });
-
 
 </script>
 </body>
